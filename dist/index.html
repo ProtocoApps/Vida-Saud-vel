@@ -1,0 +1,85 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vida Alinhada</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&family=Montserrat:wght@300;400;500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              primary: '#800020',
+              burgundy: {
+                50: '#fdf2f4',
+                100: '#fbe6e9',
+                200: '#f7cfd6',
+                300: '#f0aab7',
+                400: '#e57b8e',
+                500: '#d64d64',
+                600: '#b9344b',
+                700: '#9b283c',
+                800: '#800020', // Main brand color
+                900: '#6d1d2b',
+              },
+              gold: {
+                50: '#fefbf0',
+                100: '#fdf6db',
+                200: '#fbecad',
+                300: '#f8dc70',
+                400: '#f4c83e',
+                500: '#ead589', // Main accent color
+                600: '#d4af37',
+                700: '#b38b25',
+                800: '#926f21',
+                900: '#7a5c1e',
+              },
+              neutral: {
+                light: '#fdfaf8',
+                dark: '#1a1212',
+              }
+            },
+            fontFamily: {
+              serif: ['Noto Serif', 'serif'],
+              sans: ['Montserrat', 'sans-serif'],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .filled-icon {
+        font-variation-settings: 'FILL' 1;
+      }
+      /* Custom iOS-like shadows */
+      .ios-shadow {
+        box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.08);
+      }
+      /* Hide scrollbar */
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+
+<link rel="stylesheet" href="./index.css">
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3"
+  }
+}
+</script>
+  <script type="module" crossorigin src="/Vida-Saud-vel/assets/index-DqZqBCVs.js"></script>
+</head>
+  <body class="font-sans antialiased text-neutral-900 bg-neutral-light dark:bg-neutral-dark dark:text-white transition-colors duration-300">
+    <div id="root"></div>
+  </body>
+</html>
