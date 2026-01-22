@@ -39,7 +39,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
 
       <div className="p-4 flex-1 flex flex-col">
         <div 
-          className="w-full aspect-[4/3] rounded-2xl bg-cover bg-center shadow-lg transition-all duration-700"
+          className="w-full aspect-[3/2] rounded-2xl bg-cover bg-center shadow-lg transition-all duration-700"
           style={{ backgroundImage: `url(${steps[step].imageUrl})` }}
         >
           <div className="h-full w-full bg-primary/5 rounded-2xl" />
@@ -50,7 +50,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
           <p className="text-gray-500 dark:text-gray-400 leading-relaxed text-lg max-w-xs">{steps[step].description}</p>
         </div>
 
-        <div className="pb-12 px-6 space-y-8">
+        <div className="pb-8 px-6 space-y-8">
           <div className="flex justify-center gap-2">
             {steps.map((_, i) => (
               <div 
