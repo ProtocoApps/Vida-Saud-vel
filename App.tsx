@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { AppScreen, NavigateFunction } from './types';
+import { GlobalUserProvider } from './contexts/GlobalUserContext';
 import Login from './pages/Login';
 import Onboarding from './pages/Onboarding';
 import Home from './pages/Home';
@@ -63,11 +64,13 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex justify-center min-h-screen bg-neutral-100 dark:bg-black/20">
-      <div className="w-full max-w-[430px] bg-white dark:bg-neutral-dark shadow-2xl relative flex flex-col h-screen overflow-hidden">
-        {renderScreen()}
+    <GlobalUserProvider>
+      <div className="flex justify-center min-h-screen bg-neutral-100 dark:bg-black/20">
+        <div className="w-full max-w-[430px] bg-white dark:bg-neutral-dark shadow-2xl relative flex flex-col h-screen overflow-hidden">
+          {renderScreen()}
+        </div>
       </div>
-    </div>
+    </GlobalUserProvider>
   );
 };
 
