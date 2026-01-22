@@ -1,15 +1,61 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppScreen } from '../types';
 import BottomNav from '../components/BottomNav';
+import { supabase } from '../lib/supabase';
 
 interface PerfilProps {
   onNavigate: (screen: AppScreen) => void;
 }
 
 const Perfil: React.FC<PerfilProps> = ({ onNavigate }) => {
+  const [userName, setUserName] = useState<string>('');
+  const [userEmail, setUserEmail] = useState<string>('');
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          // Obter nome dos metadados
+          const nameFromMetadata = user.user_metadata?.name;
+          if (nameFromMetadata) {
+            setUserName(nameFromMetadata);
+          }
+          
+          // Obter email
+          setUserEmail(user.email || '');
+          
+          // Tentar obter avatar e outros dados da tabela users
+          const { data: userData } = await supabase
+            .from('users')
+            .select('avatar_url, phone, gender')
+            .eq('id', user.id)
+            .single();
+          
+          if (userData?.avatar_url) {
+            setUserAvatar(userData.avatar_url);
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados do usuário:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUserData();
+  }, []);
+
+  const getUserInitial = (name: string) => {
+    return name && name.length > 0 ? name.charAt(0).toUpperCase() : 'U';
+  };
+
   return (
-    <div className="flex flex-col min-h-screen pb-24 bg-neutral-light dark:bg-neutral-dark">
+    <div className="flex flex-col h-full pb-24 bg-neutral-light dark:bg-neutral-dark">
       <header className="sticky top-0 bg-neutral-light/80 dark:bg-neutral-dark/80 backdrop-blur-md z-10 p-4 flex items-center justify-between">
         <button className="size-10 flex items-center justify-center"><span className="material-symbols-outlined">settings</span></button>
         <h2 className="font-serif text-lg font-bold dark:text-white">Perfil</h2>
@@ -19,14 +65,25 @@ const Perfil: React.FC<PerfilProps> = ({ onNavigate }) => {
       <main className="px-5 pt-4 space-y-8">
         <div className="flex flex-col items-center text-center">
           <div className="relative">
-            <div className="size-32 rounded-full border-4 border-gold-500 shadow-xl overflow-hidden">
-              <img src="https://picsum.photos/300" alt="Avatar" className="w-full h-full object-cover" />
-            </div>
+            {loading ? (
+              <div className="size-32 rounded-full border-4 border-gold-500 shadow-xl bg-gray-100 animate-pulse" />
+            ) : userAvatar ? (
+              <div className="size-32 rounded-full border-4 border-gold-500 shadow-xl overflow-hidden">
+                <img src={userAvatar} alt="Avatar" className="w-full h-full object-cover" />
+              </div>
+            ) : (
+              <div className="size-32 rounded-full border-4 border-gold-500 shadow-xl bg-primary/10 flex items-center justify-center">
+                <span className="text-primary font-bold text-5xl">{getUserInitial(userName)}</span>
+              </div>
+            )}
             <div className="absolute bottom-1 right-1 size-8 bg-primary text-white rounded-full border-2 border-white dark:border-neutral-dark flex items-center justify-center">
               <span className="material-symbols-outlined text-sm filled-icon">verified</span>
             </div>
           </div>
-          <h1 className="font-serif text-2xl font-bold mt-4 dark:text-white">Mariana Alinhada</h1>
+          <h1 className="font-serif text-2xl font-bold mt-4 dark:text-white">{loading ? 'Carregando...' : (userName || 'Usuário')}</h1>
+          {userEmail && (
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{userEmail}</p>
+          )}
           <div className="flex items-center gap-1.5 mt-1">
             <span className="material-symbols-outlined text-gold-500 text-sm filled-icon">workspace_premium</span>
             <span className="text-primary font-bold text-sm">Membro Premium</span>

@@ -10,7 +10,8 @@ export enum AppScreen {
   ROTINA = 'ROTINA',
   PERFIL = 'PERFIL',
   AUDIOS = 'AUDIOS',
-  FOME_EMOCIONAL = 'FOME_EMOCIONAL'
+  FOME_EMOCIONAL = 'FOME_EMOCIONAL',
+  VIDEO_PLAYER = 'VIDEO_PLAYER'
 }
 
 export interface Workout {
@@ -29,4 +30,15 @@ export interface AudioTrack {
   duration: string;
   category: string;
   imageUrl: string;
+}
+
+export interface NavigationParams {
+  videoUrl?: string;
+  title?: string;
+  category?: string;
+  duration?: string;
+}
+
+export interface NavigateFunction {
+  (screen: AppScreen | { screen: AppScreen; params?: NavigationParams }): void;
 }

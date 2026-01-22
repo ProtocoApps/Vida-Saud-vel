@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { AppScreen } from '../types';
+import { useGlobalUser } from '../contexts/GlobalUserContext';
 import { supabase } from '../lib/supabase';
 
 interface LoginProps {
@@ -6,6 +8,7 @@ interface LoginProps {
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
+  const { setUserData } = useGlobalUser();
   const [isSignUp, setIsSignUp] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -33,6 +36,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
       if (data.user) {
         setSuccess('Login realizado com sucesso!');
+        setUserData(data.user);
         setTimeout(() => {
           onLogin();
         }, 500);
@@ -164,32 +168,17 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         if (data.session) {
           // Usuário autenticado automaticamente (email confirmation desabilitado)
           setSuccess('Conta criada com sucesso! Redirecionando...');
+          setUserData(data.user);
           setTimeout(() => {
             onLogin(); // Redireciona para Home
           }, 500);
         } else {
           // Usuário precisa confirmar email - fazer login automático mesmo assim
-          setSuccess('Conta criada com sucesso! Fazendo login...');
-
-          // Tentar fazer login automático imediatamente após cadastro
-          const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-            email: email.trim().toLowerCase(),
-            password: password,
-          });
-
-          if (!loginError && loginData.user) {
-            setSuccess('Login realizado! Redirecionando...');
-            setTimeout(() => {
-              onLogin(); // Redireciona para Home
-            }, 500);
-          } else {
-            // Se não conseguir fazer login automático, redireciona mesmo assim
-            // Isso permite que o usuário acesse a Home mesmo sem confirmação de email
-            setSuccess('Conta criada! Redirecionando...');
-            setTimeout(() => {
-              onLogin(); // Redireciona para Home
-            }, 1000);
-          }
+          setSuccess('Conta criada! Fazendo login...');
+          setUserData(data.user);
+          setTimeout(() => {
+            onLogin(); // Redireciona para Home
+          }, 500);
         }
       } else {
         setError('Não foi possível criar a conta. Tente novamente.');
@@ -244,7 +233,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-white dark:bg-neutral-dark p-6 justify-between relative overflow-hidden">
+    <div className="flex flex-col h-full bg-neutral-light dark:bg-neutral-dark p-6 justify-between relative overflow-hidden">
       {/* Background blurs */}
       <div className="absolute -top-20 -left-20 w-80 h-80 bg-primary/5 rounded-full blur-3xl -z-10" />
       <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-gold-500/5 rounded-full blur-3xl -z-10" />

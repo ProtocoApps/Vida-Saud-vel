@@ -20,7 +20,7 @@ const Rotina: React.FC<RotinaProps> = ({ onNavigate }) => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen pb-24 bg-neutral-light dark:bg-neutral-dark">
+    <div className="flex flex-col h-full pb-24 bg-neutral-light dark:bg-neutral-dark">
       <header className="p-4 flex items-center justify-between border-b border-gray-100 dark:border-white/5 bg-white dark:bg-neutral-dark">
         <button onClick={() => onNavigate(AppScreen.HOME)} className="size-10 flex items-center justify-center"><span className="material-symbols-outlined">arrow_back_ios</span></button>
         <h2 className="font-serif text-lg font-bold dark:text-white">Rotina Atualizada</h2>
@@ -34,18 +34,18 @@ const Rotina: React.FC<RotinaProps> = ({ onNavigate }) => {
               <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-gray-100 dark:text-white/5" />
               <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray="251.2" strokeDashoffset={251.2 * 0.35} className="text-primary" />
             </svg>
-            <span className="absolute text-xl font-bold text-primary">65%</span>
+            <span className="text-xl font-bold text-green-700">65%</span>
           </div>
           <div>
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Evolução Hoje</p>
             <p className="text-2xl font-bold dark:text-white">Quase lá!</p>
-            <p className="text-primary font-bold text-sm mt-0.5">+10% desde ontem</p>
+            <p className="text-green-700 font-bold text-sm mt-0.5">+10% desde ontem</p>
           </div>
         </div>
 
         <div className="text-center">
           <h3 className="text-2xl font-bold dark:text-white">Equilíbrio e Bem-estar</h3>
-          <p className="text-sm italic text-primary/70 dark:text-primary/90 mt-1">Um passo de cada vez para sua evolução</p>
+          <p className="text-sm italic text-green-700/70 dark:text-green-700/90 mt-1">Um passo de cada vez para sua evolução</p>
         </div>
 
         <div className="flex border-b border-gray-100 dark:border-white/5">
@@ -54,7 +54,7 @@ const Rotina: React.FC<RotinaProps> = ({ onNavigate }) => {
               key={t}
               onClick={() => setTab(t)}
               className={`flex-1 py-4 font-bold text-sm transition-all border-b-2 ${
-                tab === t ? 'border-gold-700 text-gold-700' : 'border-transparent text-gray-400'
+                tab === t ? 'border-green-700 text-green-700' : 'border-transparent text-gray-400'
               }`}
             >
               {t}
@@ -69,7 +69,7 @@ const Rotina: React.FC<RotinaProps> = ({ onNavigate }) => {
               onClick={() => toggleTask(task.id)}
               className="flex items-center gap-4 p-4 bg-white dark:bg-white/5 rounded-2xl ios-shadow border border-gray-50 dark:border-white/5 cursor-pointer hover:border-primary/20 transition-all group"
             >
-              <div className="size-12 rounded-xl bg-gold-500/10 flex items-center justify-center text-gold-600">
+              <div className="size-12 rounded-xl bg-green-700/10 flex items-center justify-center text-green-700">
                 <span className="material-symbols-outlined text-2xl filled-icon">{task.icon}</span>
               </div>
               <div className="flex-1">
@@ -77,7 +77,7 @@ const Rotina: React.FC<RotinaProps> = ({ onNavigate }) => {
                 <p className="text-[10px] font-bold text-gray-400 mt-1">{task.sub}</p>
               </div>
               <div className={`size-8 rounded-full border-2 transition-all flex items-center justify-center ${
-                task.done ? 'bg-primary border-primary text-white' : 'border-gray-100 dark:border-white/10'
+                task.done ? 'bg-green-700 border-green-700 text-white' : 'border-gray-100 dark:border-white/10'
               }`}>
                 {task.done && <span className="material-symbols-outlined text-sm font-bold">check</span>}
               </div>

@@ -18,7 +18,7 @@ const AudioLibrary: React.FC<AudioLibraryProps> = ({ onNavigate }) => {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-neutral-light dark:bg-neutral-dark">
+    <div className="flex flex-col h-full bg-neutral-light dark:bg-neutral-dark">
       <header className="sticky top-0 bg-neutral-light/80 dark:bg-neutral-dark/80 backdrop-blur-md z-20">
         <div className="flex items-center p-4 justify-between">
           <button onClick={() => onNavigate(AppScreen.HOME)} className="size-12 flex items-center justify-center">
@@ -35,7 +35,7 @@ const AudioLibrary: React.FC<AudioLibraryProps> = ({ onNavigate }) => {
               key={t}
               onClick={() => setTab(t)}
               className={`py-4 px-4 font-bold text-sm tracking-wide transition-all border-b-2 whitespace-nowrap ${
-                tab === t ? 'border-gold-500 text-gray-800 dark:text-white' : 'border-transparent text-gray-400'
+                tab === t ? 'border-green-700 text-gray-800 dark:text-white' : 'border-transparent text-gray-400'
               }`}
             >
               {t}
@@ -46,13 +46,13 @@ const AudioLibrary: React.FC<AudioLibraryProps> = ({ onNavigate }) => {
 
       <main className="p-4 space-y-4 pb-32">
         {tracks.map((track) => (
-          <div key={track.id} className="flex items-center gap-4 bg-white dark:bg-white/5 p-3 rounded-2xl ios-shadow border-l-4 border-transparent hover:border-gold-500 transition-all cursor-pointer group">
+          <div key={track.id} className="flex items-center gap-4 bg-white dark:bg-white/5 p-3 rounded-2xl ios-shadow border-l-4 border-transparent hover:border-green-700 transition-all cursor-pointer group">
             <img src={track.imageUrl} alt={track.title} className="size-16 rounded-xl object-cover shrink-0" />
             <div className="flex-1">
               <h3 className="font-serif font-bold dark:text-white text-base leading-tight mb-1">{track.title}</h3>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">{track.duration}</span>
-                <div className="size-1 rounded-full bg-gold-500" />
+                <div className="size-1 rounded-full bg-green-700" />
                 <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{track.category}</span>
               </div>
             </div>
@@ -70,15 +70,15 @@ const AudioLibrary: React.FC<AudioLibraryProps> = ({ onNavigate }) => {
             <img src={tracks[0].imageUrl} className="size-11 rounded-lg object-cover" />
             <div className="flex flex-col">
               <h4 className="text-sm font-bold dark:text-white leading-tight">Equilíbrio Emocional</h4>
-              <div className="flex items-center gap-1.5 text-gold-500">
+              <div className="flex items-center gap-1.5 text-green-700">
                 <span className="material-symbols-outlined text-[14px] filled-icon">graphic_eq</span>
                 <span className="text-[10px] font-bold uppercase tracking-tight text-gray-500 dark:text-gray-400">Em reprodução • 04:20</span>
               </div>
             </div>
           </div>
           <div className="flex items-center gap-4 px-2">
-            <button className="text-gold-500"><span className="material-symbols-outlined">timer</span></button>
-            <button className="text-gold-500"><span className="material-symbols-outlined">edit_note</span></button>
+            <button className="text-green-700"><span className="material-symbols-outlined">timer</span></button>
+            <button className="text-green-700"><span className="material-symbols-outlined">edit_note</span></button>
             <button className="size-11 bg-primary text-white rounded-full flex items-center justify-center shadow-lg shadow-primary/30">
               <span className="material-symbols-outlined text-2xl filled-icon">pause</span>
             </button>

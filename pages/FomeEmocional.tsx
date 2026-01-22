@@ -22,7 +22,7 @@ const FomeEmocional: React.FC<FomeEmocionalProps> = ({ onNavigate }) => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-neutral-light dark:bg-neutral-dark">
+    <div className="flex flex-col h-full bg-neutral-light dark:bg-neutral-dark">
       <header className="p-4 flex items-center justify-between sticky top-0 bg-neutral-light/80 dark:bg-neutral-dark/80 backdrop-blur-md z-10">
         <button onClick={() => onNavigate(AppScreen.HOME)} className="size-10 flex items-center justify-center"><span className="material-symbols-outlined">arrow_back_ios_new</span></button>
         <h2 className="font-serif text-lg font-bold dark:text-white">Fome Emocional Atualizada</h2>

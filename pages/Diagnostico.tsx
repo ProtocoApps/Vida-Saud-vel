@@ -11,7 +11,7 @@ const Diagnostico: React.FC<DiagnosticoProps> = ({ onNavigate, onFinish }) => {
   const [value, setValue] = useState(7);
 
   return (
-    <div className="flex flex-col min-h-screen bg-neutral-light dark:bg-neutral-dark relative">
+    <div className="flex flex-col h-full bg-neutral-light dark:bg-neutral-dark relative">
       <header className="flex items-center p-4 justify-between border-b border-gray-100 dark:border-white/5">
         <button onClick={() => onNavigate(AppScreen.HOME)} className="size-10 rounded-full flex items-center justify-center">
           <span className="material-symbols-outlined">arrow_back_ios_new</span>
