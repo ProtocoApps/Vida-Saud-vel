@@ -33,6 +33,7 @@ View your app in AI Studio: https://ai.studio/apps/temp/1
 
 Para usar as funcionalidades de login e cadastro:
 
+### 1. Configurar Credenciais
 1. Acesse https://app.supabase.com e faça login
 2. Vá em Settings > API
 3. Copie a **URL** do projeto (formato: https://xxxxx.supabase.co)
@@ -42,3 +43,19 @@ Para usar as funcionalidades de login e cadastro:
    VITE_SUPABASE_URL=https://seu-projeto-id.supabase.co
    VITE_SUPABASE_ANON_KEY=sua-chave-publica-aqui
    ```
+
+### 2. Criar Tabela Users (IMPORTANTE!)
+**O cadastro só funcionará completamente após criar a tabela users:**
+
+1. No Supabase, vá para **Database** > **SQL Editor**
+2. Clique em **New Query**
+3. Copie e cole o conteúdo do arquivo `criar-tabela-users.sql`
+4. Clique em **Run**
+
+**Verifique se apareceu:** ✅ "Success. No rows returned"
+
+### 3. Testar Configuração
+Execute o script de teste para verificar se tudo está funcionando:
+```bash
+node teste-tabela-users.js
+```

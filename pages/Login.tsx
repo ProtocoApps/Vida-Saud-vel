@@ -132,6 +132,34 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       }
 
       if (data.user) {
+        try {
+          // Após criar o usuário na autenticação, salvar na tabela users
+          const { error: insertError } = await supabase
+            .from('users')
+            .insert([
+              {
+                id: data.user.id, // ID do usuário da autenticação
+                name: name.trim(),
+                email: email.trim().toLowerCase(),
+                phone: phoneNumbers || null,
+                gender: gender,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              }
+            ]);
+
+          if (insertError) {
+            console.error('Erro ao salvar na tabela users:', insertError);
+            // Não interrompe o fluxo, apenas loga o erro
+            console.warn('Usuário criado na autenticação, mas falhou ao salvar na tabela users');
+          } else {
+            console.log('✅ Usuário salvo com sucesso na tabela users');
+          }
+        } catch (dbError) {
+          console.error('Erro inesperado ao salvar na tabela users:', dbError);
+          // Continua o fluxo mesmo com erro na tabela
+        }
+
         // Verificar se já tem sessão (usuário autenticado imediatamente)
         if (data.session) {
           // Usuário autenticado automaticamente (email confirmation desabilitado)
@@ -142,7 +170,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         } else {
           // Usuário precisa confirmar email - fazer login automático mesmo assim
           setSuccess('Conta criada com sucesso! Fazendo login...');
-          
+
           // Tentar fazer login automático imediatamente após cadastro
           const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
             email: email.trim().toLowerCase(),
