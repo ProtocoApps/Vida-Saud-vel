@@ -1,0 +1,8 @@
+
+{
+  "name": "Vida Alinhada",
+  "description": "A comprehensive wellness and mindfulness application featuring guided meditations, personalized workouts, habit tracking, and emotional self-assessment.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
