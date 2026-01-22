@@ -62,7 +62,7 @@ const Perfil: React.FC<PerfilProps> = ({ onNavigate }) => {
         <button className="size-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center"><span className="material-symbols-outlined text-xl">edit</span></button>
       </header>
 
-      <main className="px-5 pt-4 space-y-8">
+      <main className="px-5 pt-4 space-y-8 overflow-y-auto flex-1">
         <div className="flex flex-col items-center text-center">
           <div className="relative">
             {loading ? (

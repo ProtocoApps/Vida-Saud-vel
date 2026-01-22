@@ -90,7 +90,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
         </button>
       </header>
 
-      <main className="px-5 pt-4 space-y-6">
+      <main className="px-5 pt-4 space-y-6 overflow-y-auto flex-1">
         <div className="p-5 rounded-2xl bg-gradient-to-br from-green-800 to-green-900 border-2 border-gold-500">
           <p className="font-serif italic text-sm text-gold-400 leading-relaxed">
             "O equilíbrio não é algo que você encontra, é algo que você cria."
