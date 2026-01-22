@@ -1,0 +1,74 @@
+========================================
+  COMANDOS GIT - VIDA SAUDÁVEL
+========================================
+
+SEU REPOSITÓRIO: https://github.com/ProtocoApps/Vida-Saud-vel.git
+
+========================================
+  PARA ATUALIZAR O PROJETO NO GITHUB:
+========================================
+
+1. VERIFICAR STATUS:
+   git status
+
+2. ADICIONAR ALTERAÇÕES:
+   git add .
+
+3. FAZER COMMIT:
+   git commit -m "Descrição das alterações"
+
+4. ENVIAR PARA GITHUB:
+   git push origin main
+
+========================================
+  PARA BAIXAR ALTERAÇÕES DO GITHUB:
+========================================
+
+git pull origin main
+
+========================================
+  VERIFICAR HISTÓRICO:
+========================================
+
+git log --oneline
+
+========================================
+  VERIFICAR BRANCH ATUAL:
+========================================
+
+git branch
+
+========================================
+  CRIAR NOVA BRANCH:
+========================================
+
+git checkout -b nome-da-branch
+
+========================================
+  VOLTAR PARA MAIN:
+========================================
+
+git checkout main
+
+========================================
+  EMERGÊNCIA - REVERTER ALTERAÇÕES:
+========================================
+
+# Desfazer alterações não commitadas:
+git checkout -- .
+
+# Desfazer último commit (mantém arquivos):
+git reset --soft HEAD~1
+
+========================================
+  DICAS IMPORTANTES:
+========================================
+
+• Sempre faça commit antes de push
+• Use mensagens descritivas nos commits
+• Faça backup antes de grandes mudanças
+• Teste localmente antes de enviar para GitHub
+
+========================================
+  SEU APP ESTÁ NO AR! 🚀
+========================================
