@@ -233,7 +233,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-neutral-light dark:bg-neutral-dark p-6 justify-between relative overflow-hidden">
+    <div className="flex flex-col h-full bg-neutral-light dark:bg-neutral-dark p-6 justify-between relative overflow-y-auto">
       {/* Background blurs */}
       <div className="absolute -top-20 -left-20 w-80 h-80 bg-primary/5 rounded-full blur-3xl -z-10" />
       <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-gold-500/5 rounded-full blur-3xl -z-10" />
