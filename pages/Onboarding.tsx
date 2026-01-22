@@ -39,10 +39,10 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinish }) => {
 
       <div className="p-4 flex-1 flex flex-col">
         <div 
-          className="w-full aspect-[4/5] rounded-3xl bg-cover bg-center shadow-lg transition-all duration-700"
+          className="w-full aspect-[16/9] rounded-2xl bg-cover bg-center shadow-lg transition-all duration-700"
           style={{ backgroundImage: `url(${steps[step].imageUrl})` }}
         >
-          <div className="h-full w-full bg-primary/5 rounded-3xl" />
+          <div className="h-full w-full bg-primary/5 rounded-2xl" />
         </div>
 
         <div className="mt-8 text-center px-6 flex flex-col justify-center items-center flex-1">
