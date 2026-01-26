@@ -171,6 +171,15 @@ const Perfil: React.FC<PerfilProps> = ({ onNavigate }) => {
         </section>
 
         <div className="flex flex-col items-center gap-4 py-8">
+          <button 
+            onClick={async () => {
+              await supabase.auth.signOut();
+              localStorage.removeItem('hasSeenOnboarding');
+            }}
+            className="text-red-500 font-bold text-sm uppercase tracking-widest hover:underline"
+          >
+            Sair
+          </button>
           <button className="text-primary font-bold text-sm uppercase tracking-widest hover:underline">Cancelar Assinatura</button>
           <p className="text-gray-400 text-[10px] uppercase tracking-[0.3em]">Vida Alinhada • v2.4.0</p>
         </div>

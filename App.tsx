@@ -1,7 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppScreen, NavigateFunction } from './types';
 import { GlobalUserProvider } from './contexts/GlobalUserContext';
+import { supabase } from './lib/supabase';
 import Login from './pages/Login';
 import Onboarding from './pages/Onboarding';
 import Home from './pages/Home';
@@ -17,6 +18,47 @@ import VideoPlayer from './pages/VideoPlayer';
 
 const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<{ screen: AppScreen; params?: any }>({ screen: AppScreen.ONBOARDING });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          // Usuário já está logado, vai direto para Home
+          setCurrentScreen({ screen: AppScreen.HOME });
+        } else {
+          // Usuário não está logado, verifica se já viu onboarding
+          const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
+          if (hasSeenOnboarding) {
+            setCurrentScreen({ screen: AppScreen.LOGIN });
+          } else {
+            setCurrentScreen({ screen: AppScreen.ONBOARDING });
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao verificar autenticação:', error);
+        setCurrentScreen({ screen: AppScreen.ONBOARDING });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+
+    // Escutar mudanças na sessão
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setCurrentScreen({ screen: AppScreen.HOME });
+      } else {
+        const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
+        setCurrentScreen({ screen: hasSeenOnboarding ? AppScreen.LOGIN : AppScreen.ONBOARDING });
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const navigate: NavigateFunction = (screenOrParams) => {
     if (typeof screenOrParams === 'string') {
@@ -27,9 +69,20 @@ const App: React.FC = () => {
   };
 
   const renderScreen = () => {
+    if (isLoading) {
+      return (
+        <div className="flex flex-col h-full bg-white dark:bg-neutral-dark items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      );
+    }
+
     switch (currentScreen.screen) {
       case AppScreen.ONBOARDING:
-        return <Onboarding onFinish={() => navigate(AppScreen.LOGIN)} />;
+        return <Onboarding onFinish={() => {
+          localStorage.setItem('hasSeenOnboarding', 'true');
+          navigate(AppScreen.LOGIN);
+        }} />;
       case AppScreen.LOGIN:
         return <Login onLogin={() => navigate(AppScreen.HOME)} />;
       case AppScreen.HOME:
