@@ -1,6 +1,16 @@
 
 import React, { useState } from 'react';
-import { AppScreen, AudioTrack } from '../types';
+import { AppScreen } from '../types';
+import AudioPlayer from '../components/AudioPlayer';
+
+interface AudioTrack {
+  id: string;
+  title: string;
+  duration: string;
+  category: string;
+  imageUrl: string;
+  audioUrl: string;
+}
 
 interface AudioLibraryProps {
   onNavigate: (screen: AppScreen) => void;
@@ -8,14 +18,93 @@ interface AudioLibraryProps {
 
 const AudioLibrary: React.FC<AudioLibraryProps> = ({ onNavigate }) => {
   const [tab, setTab] = useState('Emoções');
+  const [selectedTrack, setSelectedTrack] = useState<AudioTrack | null>(null);
 
   const tracks: AudioTrack[] = [
-    { id: '1', title: 'Equilíbrio Emocional', duration: '15 min', category: 'EMOÇÕES', imageUrl: 'https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?auto=format&fit=crop&q=80&w=200' },
-    { id: '2', title: 'Paz Interior e Silêncio', duration: '12 min', category: 'EMOÇÕES', imageUrl: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=200' },
-    { id: '3', title: 'Manejo da Ansiedade', duration: '18 min', category: 'EMOÇÕES', imageUrl: 'https://images.unsplash.com/photo-1471922694854-ff1b63b20054?auto=format&fit=crop&q=80&w=200' },
-    { id: '4', title: 'Frequência da Gratidão', duration: '10 min', category: 'EMOÇÕES', imageUrl: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&q=80&w=200' },
-    { id: '5', title: 'Acolhendo a Sombra', duration: '25 min', category: 'EMOÇÕES', imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=200' },
+    {
+      id: '1',
+      title: 'Equilíbrio Emocional',
+      duration: '15 min',
+      category: 'EMOÇÕES',
+      imageUrl: 'https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?auto=format&fit=crop&q=80&w=200',
+      audioUrl: 'https://www.bensound.com/bensound-music/bensound-meditation.mp3'
+    },
+    {
+      id: '2',
+      title: 'Paz Interior e Silêncio',
+      duration: '12 min',
+      category: 'EMOÇÕES',
+      imageUrl: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=200',
+      audioUrl: 'https://www.bensound.com/bensound-music/bensound-relaxing.mp3'
+    },
+    {
+      id: '3',
+      title: 'Manejo da Ansiedade',
+      duration: '18 min',
+      category: 'EMOÇÕES',
+      imageUrl: 'https://images.unsplash.com/photo-1471922694854-ff1b63b20054?auto=format&fit=crop&q=80&w=200',
+      audioUrl: 'https://www.bensound.com/bensound-music/bensound-slowmotion.mp3'
+    },
+    {
+      id: '4',
+      title: 'Frequência da Gratidão',
+      duration: '10 min',
+      category: 'EMOÇÕES',
+      imageUrl: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&q=80&w=200',
+      audioUrl: 'https://www.bensound.com/bensound-music/bensound-happiness.mp3'
+    },
+    {
+      id: '5',
+      title: 'Acolhendo a Sombra',
+      duration: '25 min',
+      category: 'EMOÇÕES',
+      imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=200',
+      audioUrl: 'https://www.bensound.com/bensound-music/bensound-spiritual.mp3'
+    },
   ];
+
+  const corpoTracks: AudioTrack[] = [
+    {
+      id: '6',
+      title: 'Respiração Consciente',
+      duration: '8 min',
+      category: 'CORPO',
+      imageUrl: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=200',
+      audioUrl: 'https://www.bensound.com/bensound-music/bensound-yoga.mp3'
+    },
+    {
+      id: '7',
+      title: 'Relaxamento Profundo',
+      duration: '20 min',
+      category: 'CORPO',
+      imageUrl: 'https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&q=80&w=200',
+      audioUrl: 'https://www.bensound.com/bensound-music/bensound-wellness.mp3'
+    },
+  ];
+
+  const getAllTracks = () => {
+    switch (tab) {
+      case 'Emoções':
+        return tracks;
+      case 'Corpo':
+        return corpoTracks;
+      case 'Constância':
+        return tracks.slice(0, 3);
+      case 'Profecias':
+        return tracks.slice(2, 5);
+      default:
+        return tracks;
+    }
+  };
+
+  if (selectedTrack) {
+    return (
+      <AudioPlayer 
+        track={selectedTrack} 
+        onClose={() => setSelectedTrack(null)} 
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col h-full bg-neutral-light dark:bg-neutral-dark">
@@ -44,9 +133,13 @@ const AudioLibrary: React.FC<AudioLibraryProps> = ({ onNavigate }) => {
         </div>
       </header>
 
-      <main className="p-4 space-y-4 pb-32">
-        {tracks.map((track) => (
-          <div key={track.id} className="flex items-center gap-4 bg-white dark:bg-white/5 p-3 rounded-2xl ios-shadow border-l-4 border-transparent hover:border-green-700 transition-all cursor-pointer group">
+      <main className="p-4 space-y-4 pb-32 overflow-y-auto flex-1">
+        {getAllTracks().map((track) => (
+          <div 
+            key={track.id} 
+            className="flex items-center gap-4 bg-white dark:bg-white/5 p-3 rounded-2xl ios-shadow border-l-4 border-transparent hover:border-green-700 transition-all cursor-pointer group"
+            onClick={() => setSelectedTrack(track)}
+          >
             <img src={track.imageUrl} alt={track.title} className="size-16 rounded-xl object-cover shrink-0" />
             <div className="flex-1">
               <h3 className="font-serif font-bold dark:text-white text-base leading-tight mb-1">{track.title}</h3>
@@ -62,29 +155,6 @@ const AudioLibrary: React.FC<AudioLibraryProps> = ({ onNavigate }) => {
           </div>
         ))}
       </main>
-
-      {/* Mini Player */}
-      <div className="fixed bottom-6 left-4 right-4 w-[calc(100%-32px)] max-w-[398px] z-50">
-        <div className="bg-white/90 dark:bg-neutral-dark/95 backdrop-blur-xl rounded-2xl p-3 ios-shadow border border-gray-100 dark:border-white/10 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src={tracks[0].imageUrl} className="size-11 rounded-lg object-cover" />
-            <div className="flex flex-col">
-              <h4 className="text-sm font-bold dark:text-white leading-tight">Equilíbrio Emocional</h4>
-              <div className="flex items-center gap-1.5 text-green-700">
-                <span className="material-symbols-outlined text-[14px] filled-icon">graphic_eq</span>
-                <span className="text-[10px] font-bold uppercase tracking-tight text-gray-500 dark:text-gray-400">Em reprodução • 04:20</span>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-4 px-2">
-            <button className="text-green-700"><span className="material-symbols-outlined">timer</span></button>
-            <button className="text-green-700"><span className="material-symbols-outlined">edit_note</span></button>
-            <button className="size-11 bg-primary text-white rounded-full flex items-center justify-center shadow-lg shadow-primary/30">
-              <span className="material-symbols-outlined text-2xl filled-icon">pause</span>
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
