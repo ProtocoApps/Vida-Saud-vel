@@ -35,16 +35,22 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ track, onClose }) => {
         setIsPlaying(false);
       }
     };
+    const handleError = (e: Event) => {
+      console.error('Erro no áudio:', e);
+      setIsPlaying(false);
+    };
 
     audio.addEventListener('timeupdate', updateTime);
     audio.addEventListener('loadedmetadata', updateDuration);
     audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
     audio.volume = volume;
 
     return () => {
       audio.removeEventListener('timeupdate', updateTime);
       audio.removeEventListener('loadedmetadata', updateDuration);
       audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
     };
   }, [volume, isRepeat]);
 

@@ -58,8 +58,8 @@ const AudioLibrary: React.FC<AudioLibraryProps> = ({ onNavigate }) => {
         title: 'Equilíbrio Emocional',
         duration: '15 min',
         category: 'EMOÇÕES',
-        imageUrl: 'https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?auto=format&fit=crop&q=80&w=200',
-        audioUrl: 'https://www.bensound.com/bensound-music/bensound-meditation.mp3',
+        imageUrl: 'https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?auto=format&fit=crop&w=200',
+        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
         description: 'Meditação para equilibrar suas emoções'
       },
       {
@@ -67,8 +67,8 @@ const AudioLibrary: React.FC<AudioLibraryProps> = ({ onNavigate }) => {
         title: 'Paz Interior e Silêncio',
         duration: '12 min',
         category: 'EMOÇÕES',
-        imageUrl: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=200',
-        audioUrl: 'https://www.bensound.com/bensound-music/bensound-relaxing.mp3',
+        imageUrl: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=200',
+        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
         description: 'Encontre paz e silêncio interior'
       },
       {
@@ -76,8 +76,8 @@ const AudioLibrary: React.FC<AudioLibraryProps> = ({ onNavigate }) => {
         title: 'Manejo da Ansiedade',
         duration: '18 min',
         category: 'EMOÇÕES',
-        imageUrl: 'https://images.unsplash.com/photo-1471922694854-ff1b63b20054?auto=format&fit=crop&q=80&w=200',
-        audioUrl: 'https://www.bensound.com/bensound-music/bensound-slowmotion.mp3',
+        imageUrl: 'https://images.unsplash.com/photo-1471922694854-ff1b63b20054?auto=format&fit=crop&w=200',
+        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
         description: 'Técnicas para manejar a ansiedade'
       },
       {
@@ -85,8 +85,8 @@ const AudioLibrary: React.FC<AudioLibraryProps> = ({ onNavigate }) => {
         title: 'Frequência da Gratidão',
         duration: '10 min',
         category: 'EMOÇÕES',
-        imageUrl: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&q=80&w=200',
-        audioUrl: 'https://www.bensound.com/bensound-music/bensound-happiness.mp3',
+        imageUrl: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=200',
+        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
         description: 'Pratique a gratidão diária'
       },
       {
@@ -94,8 +94,8 @@ const AudioLibrary: React.FC<AudioLibraryProps> = ({ onNavigate }) => {
         title: 'Acolhendo a Sombra',
         duration: '25 min',
         category: 'EMOÇÕES',
-        imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=200',
-        audioUrl: 'https://www.bensound.com/bensound-music/bensound-spiritual.mp3',
+        imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=200',
+        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
         description: 'Integração das partes sombrias'
       },
       {
@@ -103,8 +103,8 @@ const AudioLibrary: React.FC<AudioLibraryProps> = ({ onNavigate }) => {
         title: 'Respiração Consciente',
         duration: '8 min',
         category: 'CORPO',
-        imageUrl: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=200',
-        audioUrl: 'https://www.bensound.com/bensound-music/bensound-yoga.mp3',
+        imageUrl: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=200',
+        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3',
         description: 'Exercícios de respiração consciente'
       },
       {
@@ -112,8 +112,8 @@ const AudioLibrary: React.FC<AudioLibraryProps> = ({ onNavigate }) => {
         title: 'Relaxamento Profundo',
         duration: '20 min',
         category: 'CORPO',
-        imageUrl: 'https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&q=80&w=200',
-        audioUrl: 'https://www.bensound.com/bensound-music/bensound-wellness.mp3',
+        imageUrl: 'https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&w=200',
+        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3',
         description: 'Técnica de relaxamento profundo'
       },
     ];
