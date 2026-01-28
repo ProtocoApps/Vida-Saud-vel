@@ -243,7 +243,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           <img
             src="/animations/Meditating%20Brain.gif"
             alt="Animação"
-            className="w-16 h-16 object-contain"
+            className="w-[72px] h-[72px] object-contain"
             loading="eager"
             decoding="async"
           />
