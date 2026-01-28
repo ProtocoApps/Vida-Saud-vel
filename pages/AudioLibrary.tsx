@@ -30,6 +30,7 @@ const AudioLibrary: React.FC<AudioLibraryProps> = ({ onNavigate }) => {
 
   const loadAudios = async () => {
     try {
+      console.log('Carregando áudios do Supabase...');
       const { data, error } = await supabase
         .from('audios')
         .select('*')
@@ -41,7 +42,19 @@ const AudioLibrary: React.FC<AudioLibraryProps> = ({ onNavigate }) => {
         // Carregar áudios de fallback
         loadFallbackAudios();
       } else {
-        setTracks(data || []);
+        console.log('Áudios carregados:', data);
+        // Mapear os campos do banco para o formato esperado
+        const mappedTracks = data.map((audio: any) => ({
+          id: audio.id,
+          title: audio.title,
+          duration: audio.duration,
+          category: audio.category,
+          imageUrl: audio.image_url, // image_url no banco vs imageUrl no código
+          audioUrl: audio.audio_url, // audio_url no banco vs audioUrl no código
+          description: audio.description
+        }));
+        console.log('Áudios mapeados:', mappedTracks);
+        setTracks(mappedTracks);
       }
     } catch (error) {
       console.error('Erro ao carregar áudios:', error);
@@ -117,6 +130,7 @@ const AudioLibrary: React.FC<AudioLibraryProps> = ({ onNavigate }) => {
         description: 'Técnica de relaxamento profundo'
       },
     ];
+    console.log('Carregando áudios fallback:', fallbackTracks);
     setTracks(fallbackTracks);
   };
 
@@ -161,9 +175,7 @@ const AudioLibrary: React.FC<AudioLibraryProps> = ({ onNavigate }) => {
             <span className="material-symbols-outlined text-3xl">chevron_left</span>
           </button>
           <h2 className="font-serif text-xl font-bold dark:text-white">Biblioteca de Áudios</h2>
-          <button className="size-12 flex items-center justify-center">
-            <span className="material-symbols-outlined text-2xl">search</span>
-          </button>
+          <div className="size-12" />
         </div>
         <div className="flex border-b border-gray-100 dark:border-white/5 overflow-x-auto no-scrollbar px-4">
           {['Emoções', 'Corpo', 'Constância', 'Profecias'].map((t) => (

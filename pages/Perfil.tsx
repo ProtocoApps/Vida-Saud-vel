@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { AppScreen } from '../types';
 import BottomNav from '../components/BottomNav';
 import { supabase } from '../lib/supabase';
+import { getDiasAtivosStats, registrarDiaAtivo } from '../lib/diasAtivos';
 
 interface PerfilProps {
   onNavigate: (screen: AppScreen) => void;
@@ -13,6 +14,7 @@ const Perfil: React.FC<PerfilProps> = ({ onNavigate }) => {
   const [userEmail, setUserEmail] = useState<string>('');
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [diasAtivosStats, setDiasAtivosStats] = useState({ diasAtivos: 0, streakAtual: 0, melhorStreak: 0 });
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -39,6 +41,13 @@ const Perfil: React.FC<PerfilProps> = ({ onNavigate }) => {
           if (userData?.avatar_url) {
             setUserAvatar(userData.avatar_url);
           }
+
+          // Carregar estatísticas de dias ativos
+          const stats = await getDiasAtivosStats();
+          setDiasAtivosStats(stats);
+
+          // Registrar que o usuário está ativo hoje
+          await registrarDiaAtivo();
         }
       } catch (error) {
         console.error('Erro ao carregar dados do usuário:', error);
@@ -57,9 +66,14 @@ const Perfil: React.FC<PerfilProps> = ({ onNavigate }) => {
   return (
     <div className="flex flex-col h-full pb-24 bg-neutral-light dark:bg-neutral-dark">
       <header className="sticky top-0 bg-neutral-light/80 dark:bg-neutral-dark/80 backdrop-blur-md z-10 p-4 flex items-center justify-between">
-        <button className="size-10 flex items-center justify-center"><span className="material-symbols-outlined">settings</span></button>
+        <div className="size-10" />
         <h2 className="font-serif text-lg font-bold dark:text-white">Perfil</h2>
-        <button className="size-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center"><span className="material-symbols-outlined text-xl">edit</span></button>
+        <button 
+          onClick={() => onNavigate(AppScreen.EDITAR_PERFIL)}
+          className="size-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center"
+        >
+          <span className="material-symbols-outlined text-xl">edit</span>
+        </button>
       </header>
 
       <main className="px-5 pt-4 space-y-8 overflow-y-auto flex-1">
@@ -93,47 +107,13 @@ const Perfil: React.FC<PerfilProps> = ({ onNavigate }) => {
 
         <section className="space-y-4">
           <h3 className="font-serif text-lg font-bold dark:text-white">Progresso</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2 p-5 bg-white dark:bg-white/5 rounded-3xl ios-shadow border border-gray-100 dark:border-white/5">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Evolução Semanal</p>
-                  <p className="text-3xl font-bold dark:text-white mt-1">85%</p>
-                </div>
-                <span className="px-2 py-1 bg-primary/10 text-primary rounded-lg text-xs font-bold flex items-center gap-1">
-                  <span className="material-symbols-outlined text-xs">trending_up</span> +5%
-                </span>
-              </div>
-              <div className="h-24 flex items-end gap-1.5 px-2">
-                {[40, 60, 45, 85, 70, 90, 85].map((h, i) => (
-                  <div 
-                    key={i} 
-                    className="flex-1 bg-primary/10 rounded-t-lg relative group transition-all"
-                    style={{ height: `${h}%` }}
-                  >
-                    <div className="absolute inset-0 bg-primary opacity-20 rounded-t-lg group-hover:opacity-100 transition-opacity" />
-                  </div>
-                ))}
-              </div>
+          <div className="p-5 bg-white dark:bg-white/5 rounded-3xl ios-shadow border border-gray-100 dark:border-white/5">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Sessões</span>
+              <span className="material-symbols-outlined text-primary text-lg">spa</span>
             </div>
-
-            <div className="p-5 bg-white dark:bg-white/5 rounded-3xl ios-shadow border border-gray-100 dark:border-white/5">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Dias Ativos</span>
-                <span className="material-symbols-outlined text-gold-500 filled-icon text-lg">local_fire_department</span>
-              </div>
-              <p className="text-2xl font-bold dark:text-white">12</p>
-              <p className="text-[10px] font-bold text-primary mt-1">Melhor streak: 15</p>
-            </div>
-
-            <div className="p-5 bg-white dark:bg-white/5 rounded-3xl ios-shadow border border-gray-100 dark:border-white/5">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Sessões</span>
-                <span className="material-symbols-outlined text-primary text-lg">spa</span>
-              </div>
-              <p className="text-2xl font-bold dark:text-white">48</p>
-              <p className="text-[10px] font-bold text-primary mt-1">+12% este mês</p>
-            </div>
+            <p className="text-2xl font-bold dark:text-white">48</p>
+            <p className="text-[10px] font-bold text-primary mt-1">+12% este mês</p>
           </div>
         </section>
 
@@ -157,15 +137,35 @@ const Perfil: React.FC<PerfilProps> = ({ onNavigate }) => {
         </section>
 
         <section className="bg-white dark:bg-white/5 rounded-3xl overflow-hidden ios-shadow border border-gray-100 dark:border-white/5">
-          {['Suporte', 'Notificações', 'Privacidade'].map((item, i) => (
-            <button key={item} className={`w-full p-5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-white/5 transition-colors ${i !== 2 ? 'border-b border-gray-50 dark:border-white/5' : ''}`}>
+          {[
+            { 
+              title: 'Notificações', 
+              icon: 'notifications',
+              action: () => onNavigate(AppScreen.NOTIFICACOES)
+            },
+            { 
+              title: 'Suporte', 
+              icon: 'contact_support',
+              action: undefined
+            },
+            { 
+              title: 'Privacidade', 
+              icon: 'lock',
+              action: undefined
+            }
+          ].map((item, i) => (
+            <button 
+              key={item.title}
+              onClick={item.action || undefined}
+              className={`w-full p-5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-white/5 transition-colors ${i !== 2 ? 'border-b border-gray-50 dark:border-white/5' : ''}`}
+            >
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-primary text-xl">
-                  {i === 0 ? 'contact_support' : i === 1 ? 'notifications' : 'lock'}
-                </span>
-                <span className="font-semibold text-sm dark:text-gray-200">{item}</span>
+                <span className="material-symbols-outlined text-primary text-xl">{item.icon}</span>
+                <span className="font-semibold text-sm dark:text-gray-200">{item.title}</span>
               </div>
-              <span className="material-symbols-outlined text-gray-400 text-lg">chevron_right</span>
+              <span className="material-symbols-outlined text-gray-400 text-lg">
+                {item.action ? 'chevron_right' : ''}
+              </span>
             </button>
           ))}
         </section>

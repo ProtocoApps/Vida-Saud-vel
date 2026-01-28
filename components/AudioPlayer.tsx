@@ -7,6 +7,7 @@ interface AudioPlayerProps {
     duration: string;
     audioUrl: string;
     imageUrl: string;
+    description?: string;
   };
   onClose: () => void;
 }
@@ -20,6 +21,8 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ track, onClose }) => {
   const [isShuffle, setIsShuffle] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
+
+  console.log('AudioPlayer renderizado com track:', track);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -58,10 +61,18 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ track, onClose }) => {
     const audio = audioRef.current;
     if (!audio) return;
 
+    console.log('Tentando reproduzir/pausar áudio:', track.audioUrl);
+    console.log('Estado atual:', isPlaying);
+
     if (isPlaying) {
       audio.pause();
+      console.log('Áudio pausado');
     } else {
-      audio.play();
+      audio.play().then(() => {
+        console.log('Áudio reproduzindo com sucesso');
+      }).catch(error => {
+        console.error('Erro ao reproduzir áudio:', error);
+      });
     }
     setIsPlaying(!isPlaying);
   };
@@ -81,13 +92,17 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ track, onClose }) => {
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const audio = audioRef.current;
     const progressBar = progressBarRef.current;
-    if (!audio || !progressBar) return;
+    if (!audio || !progressBar || !audio.duration || isNaN(audio.duration)) return;
 
     const rect = progressBar.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const width = rect.width;
     const clickPercent = clickX / width;
-    audio.currentTime = clickPercent * audio.duration;
+    const newTime = clickPercent * audio.duration;
+    
+    if (!isNaN(newTime) && isFinite(newTime)) {
+      audio.currentTime = newTime;
+    }
   };
 
   const formatTime = (time: number) => {
@@ -108,15 +123,29 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ track, onClose }) => {
             <span className="material-symbols-outlined text-2xl">expand_more</span>
           </button>
           <h3 className="font-serif text-lg font-bold dark:text-white">Áudio Emocional</h3>
-          <button className="size-10 flex items-center justify-center">
-            <span className="material-symbols-outlined text-2xl">more_vert</span>
-          </button>
+          <div className="size-10" /> {/* Espaço vazio para manter o título centralizado */}
         </div>
 
         {/* Cover Image */}
         <div className="p-8">
           <div className="relative aspect-square rounded-2xl overflow-hidden shadow-2xl">
-            <img src={track.imageUrl} alt={track.title} className="w-full h-full object-cover" />
+            {track.imageUrl ? (
+              <img 
+                src={track.imageUrl} 
+                alt={track.title} 
+                className="w-full h-full object-cover"
+                onLoad={() => console.log('Imagem carregada:', track.imageUrl)}
+                onError={(e) => {
+                  console.error('Erro ao carregar imagem:', track.imageUrl);
+                  console.error('Erro detalhado:', e);
+                  e.currentTarget.src = 'https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?auto=format&fit=crop&w=200';
+                }}
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
+                <span className="material-symbols-outlined text-6xl text-white">music_note</span>
+              </div>
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
           </div>
         </div>
@@ -188,7 +217,16 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ track, onClose }) => {
         </div>
 
         {/* Hidden Audio Element */}
-        <audio ref={audioRef} src={track.audioUrl} />
+        <audio 
+          ref={audioRef} 
+          src={track.audioUrl}
+          onError={(e) => {
+            console.error('Erro ao carregar áudio:', track.audioUrl);
+            console.error('Erro detalhado:', e);
+          }}
+          onLoadStart={() => console.log('Começando a carregar áudio:', track.audioUrl)}
+          onCanPlay={() => console.log('Áudio pronto para tocar:', track.audioUrl)}
+        />
       </div>
     </div>
   );

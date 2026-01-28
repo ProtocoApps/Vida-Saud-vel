@@ -9,12 +9,17 @@ import Home from './pages/Home';
 import Treinos from './pages/Treinos';
 import Diagnostico from './pages/Diagnostico';
 import Perfil from './pages/Perfil';
+import EditarPerfil from './pages/EditarPerfil';
+import Notificacoes from './pages/Notificacoes';
+import NotificacoesUsuario from './pages/NotificacoesUsuario';
 import AudioLibrary from './pages/AudioLibrary';
 import Diario from './pages/Diario';
 import Rotina from './pages/Rotina';
 import Respiracao from './pages/Respiracao';
+import RespiracaoPratica from './pages/RespiracaoPratica';
 import FomeEmocional from './pages/FomeEmocional';
 import VideoPlayer from './pages/VideoPlayer';
+import Historico from './pages/Historico';
 
 const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<{ screen: AppScreen; params?: any }>({ screen: AppScreen.ONBOARDING });
@@ -93,6 +98,12 @@ const App: React.FC = () => {
         return <Diagnostico onNavigate={navigate} onFinish={() => navigate(AppScreen.HOME)} />;
       case AppScreen.PERFIL:
         return <Perfil onNavigate={navigate} />;
+      case AppScreen.EDITAR_PERFIL:
+        return <EditarPerfil onNavigate={navigate} />;
+      case AppScreen.NOTIFICACOES:
+        return <Notificacoes onNavigate={navigate} />;
+      case AppScreen.NOTIFICACOES_USUARIO:
+        return <NotificacoesUsuario onNavigate={navigate} />;
       case AppScreen.AUDIOS:
         return <AudioLibrary onNavigate={navigate} />;
       case AppScreen.DIARIO:
@@ -100,7 +111,9 @@ const App: React.FC = () => {
       case AppScreen.ROTINA:
         return <Rotina onNavigate={navigate} />;
       case AppScreen.RESPIRACAO:
-        return <Respiracao onNavigate={navigate} />;
+        return <Respiracao onNavigate={navigate} categoria={currentScreen.params?.categoria} />;
+      case AppScreen.RESPIRACAO_PRATICA:
+        return <RespiracaoPratica onNavigate={navigate} categoria={currentScreen.params?.categoria} />;
       case AppScreen.FOME_EMOCIONAL:
         return <FomeEmocional onNavigate={navigate} />;
       case AppScreen.VIDEO_PLAYER:
@@ -111,6 +124,8 @@ const App: React.FC = () => {
           category={currentScreen.params?.category || ''}
           duration={currentScreen.params?.duration || ''}
         />;
+      case AppScreen.HISTORICO:
+        return <Historico onNavigate={navigate} />;
       default:
         return <Home onNavigate={navigate} />;
     }

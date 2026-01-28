@@ -3,11 +3,12 @@ import React, { useState } from 'react';
 import { AppScreen } from '../types';
 
 interface RespiracaoProps {
-  onNavigate: (screen: AppScreen) => void;
+  onNavigate: (screen: AppScreen | { screen: AppScreen; params?: { categoria: string } }) => void;
+  categoria?: string;
 }
 
-const Respiracao: React.FC<RespiracaoProps> = ({ onNavigate }) => {
-  const [selected, setSelected] = useState('Ansiedade');
+const Respiracao: React.FC<RespiracaoProps> = ({ onNavigate, categoria }) => {
+  const [selected, setSelected] = useState(categoria || 'Ansiedade');
 
   const moods = [
     { id: 'Ansiedade', icon: 'air' },
@@ -62,7 +63,10 @@ const Respiracao: React.FC<RespiracaoProps> = ({ onNavigate }) => {
       </main>
 
       <footer className="p-8 pb-12 mt-auto text-center space-y-4">
-        <button className="w-full h-14 bg-primary text-white font-bold rounded-2xl shadow-xl shadow-primary/20 active:scale-95 transition-all text-lg tracking-wide">
+        <button 
+          onClick={() => onNavigate({ screen: AppScreen.RESPIRACAO_PRATICA, params: { categoria: selected } })}
+          className="w-full h-14 bg-primary text-white font-bold rounded-2xl shadow-xl shadow-primary/20 active:scale-95 transition-all text-lg tracking-wide"
+        >
           Iniciar Prática
         </button>
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Sessão de 5 minutos</p>
