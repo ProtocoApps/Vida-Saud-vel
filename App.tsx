@@ -37,24 +37,32 @@ const App: React.FC = () => {
     };
     document.addEventListener('visibilitychange', onVisibilityChange);
 
+    // Força limpar hasSeenOnboarding para garantir que o Onboarding apareça (remover depois de testar)
+    localStorage.removeItem('hasSeenOnboarding');
+
     const checkAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
           // Usuário já está logado, vai direto para Home
+          console.log('App: Usuário logado, indo para HOME');
           setCurrentScreen({ screen: AppScreen.HOME });
         } else {
           // Usuário não está logado, verifica se já viu onboarding
           const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
+          console.log('App: hasSeenOnboarding =', hasSeenOnboarding);
           if (hasSeenOnboarding) {
+            console.log('App: Já viu onboarding, indo para LOGIN');
             setCurrentScreen({ screen: AppScreen.LOGIN });
           } else {
+            console.log('App: Não viu onboarding, indo para ONBOARDING');
             setCurrentScreen({ screen: AppScreen.ONBOARDING });
           }
         }
       } catch (error) {
         console.error('Erro ao verificar autenticação:', error);
+        console.log('App: Erro, indo para ONBOARDING como fallback');
         setCurrentScreen({ screen: AppScreen.ONBOARDING });
       } finally {
         setIsLoading(false);
