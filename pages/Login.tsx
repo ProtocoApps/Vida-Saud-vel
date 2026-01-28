@@ -240,7 +240,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
       <header className="pt-12 flex flex-col items-center">
         <div className="w-20 h-20 rounded-full bg-primary/5 border border-gold-500/20 flex items-center justify-center mb-6">
-          <span className="material-symbols-outlined text-gold-500 text-5xl filled-icon">spa</span>
+          <img
+            src="/animations/Meditating%20Brain.gif"
+            alt="Animação"
+            className="w-16 h-16 object-contain"
+            loading="eager"
+            decoding="async"
+          />
         </div>
         <h2 className="text-primary dark:text-white text-4xl font-bold italic font-serif tracking-tight">Vida Alinhada</h2>
         <div className="w-12 h-0.5 bg-gold-500 mt-4" />
