@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { AppScreen, NavigateFunction } from './types';
 import { GlobalUserProvider } from './contexts/GlobalUserContext';
 import { supabase } from './lib/supabase';
+import { trackSession } from './lib/sessions';
 import Login from './pages/Login';
 import Onboarding from './pages/Onboarding';
 import Home from './pages/Home';
@@ -26,6 +26,17 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Conta uma sessão quando o app abre e quando volta a ficar visível.
+    // Protegido por janela de tempo para não inflar por refresh/navegação.
+    trackSession({ minGapMinutes: 30 });
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        trackSession({ minGapMinutes: 30 });
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
     const checkAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -62,7 +73,10 @@ const App: React.FC = () => {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const navigate: NavigateFunction = (screenOrParams) => {

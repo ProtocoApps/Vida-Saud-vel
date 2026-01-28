@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { AppScreen } from '../types';
 import BottomNav from '../components/BottomNav';
 import { supabase } from '../lib/supabase';
 import { getDiasAtivosStats, registrarDiaAtivo } from '../lib/diasAtivos';
+import { getSessionStats } from '../lib/sessions';
 
 interface PerfilProps {
   onNavigate: (screen: AppScreen) => void;
@@ -15,6 +15,7 @@ const Perfil: React.FC<PerfilProps> = ({ onNavigate }) => {
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [diasAtivosStats, setDiasAtivosStats] = useState({ diasAtivos: 0, streakAtual: 0, melhorStreak: 0 });
+  const [sessionStats, setSessionStats] = useState<{ sessionsThisMonth: number; percentChange: number | null }>({ sessionsThisMonth: 0, percentChange: null });
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -45,6 +46,9 @@ const Perfil: React.FC<PerfilProps> = ({ onNavigate }) => {
           // Carregar estatísticas de dias ativos
           const stats = await getDiasAtivosStats();
           setDiasAtivosStats(stats);
+
+          const s = await getSessionStats();
+          setSessionStats({ sessionsThisMonth: s.sessionsThisMonth, percentChange: s.percentChange });
 
           // Registrar que o usuário está ativo hoje
           await registrarDiaAtivo();
@@ -112,8 +116,12 @@ const Perfil: React.FC<PerfilProps> = ({ onNavigate }) => {
               <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Sessões</span>
               <span className="material-symbols-outlined text-primary text-lg">spa</span>
             </div>
-            <p className="text-2xl font-bold dark:text-white">48</p>
-            <p className="text-[10px] font-bold text-primary mt-1">+12% este mês</p>
+            <p className="text-2xl font-bold dark:text-white">{sessionStats.sessionsThisMonth}</p>
+            <p className="text-[10px] font-bold text-primary mt-1">
+              {sessionStats.percentChange === null
+                ? '—'
+                : `${sessionStats.percentChange >= 0 ? '+' : ''}${sessionStats.percentChange}% este mês`}
+            </p>
           </div>
         </section>
 
