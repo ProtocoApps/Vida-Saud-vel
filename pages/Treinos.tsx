@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { AppScreen, NavigateFunction } from '../types';
 import BottomNav from '../components/BottomNav';
 import { supabase } from '../lib/supabase';
+import { useGlobalUser } from '../contexts/GlobalUserContext';
+import { verificarAssinatura } from '../lib/assinatura';
 
 interface TreinosProps {
   onNavigate: NavigateFunction;
@@ -20,11 +22,30 @@ interface VideoTreino {
 }
 
 const Treinos: React.FC<TreinosProps> = ({ onNavigate }) => {
+  const { userEmail } = useGlobalUser();
+  console.log('Treinos: userEmail =', userEmail);
   const [categoria, setCategoria] = useState('Todos');
   const [videos, setVideos] = useState<VideoTreino[]>([]);
   const [loading, setLoading] = useState(true);
   const [treinoDoDia, setTreinoDoDia] = useState<VideoTreino | null>(null);
   const [loadingTreinoDoDia, setLoadingTreinoDoDia] = useState(true);
+  const [isAssinante, setIsAssinante] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkAssinatura = async () => {
+      console.log('Treinos: Verificando assinatura para userEmail =', userEmail);
+      if (userEmail) {
+        const assinatura = await verificarAssinatura(userEmail);
+        console.log('Treinos: Assinatura encontrada =', assinatura);
+        setIsAssinante(!!assinatura);
+      } else {
+        console.log('Treinos: Sem userEmail, setando isAssinante = false');
+        setIsAssinante(false);
+      }
+    };
+    
+    checkAssinatura();
+  }, [userEmail]);
 
   useEffect(() => {
     const loadVideos = async () => {
@@ -213,19 +234,49 @@ const Treinos: React.FC<TreinosProps> = ({ onNavigate }) => {
             </div>
           ) : (
             // Mostra lista completa apenas se não houver treino programado
-            filteredVideos.map((video) => (
-              <div key={video.id} className="bg-white dark:bg-white/5 rounded-3xl overflow-hidden ios-shadow border border-gray-50 dark:border-white/5 group active:scale-[0.98] transition-all cursor-pointer"
-                   onClick={() => onNavigate({
-                     screen: AppScreen.VIDEO_PLAYER,
-                     params: {
-                       videoUrl: video.video_url,
-                       title: video.titulo,
-                       category: video.categoria,
-                       duration: video.duracao
-                     }
-                   })}
-                 >
-                <div className="relative aspect-video">
+            filteredVideos.map((video, index) => {
+              const isFirstVideo = index === 0;
+              const canAccess = isAssinante || isFirstVideo;
+              
+              console.log(`Treinos: Vídeo ${index + 1} - isFirstVideo=${isFirstVideo}, isAssinante=${isAssinante}, canAccess=${canAccess}`);
+              
+              return (
+                <div key={video.id} className={`bg-white dark:bg-white/5 rounded-3xl overflow-hidden ios-shadow border border-gray-50 dark:border-white/5 group active:scale-[0.98] transition-all ${canAccess ? 'cursor-pointer' : 'cursor-not-allowed opacity-75'}`}
+                     onClick={() => {
+                       if (!canAccess) {
+                         onNavigate(AppScreen.ASSINATURA);
+                         return;
+                       }
+                       onNavigate({
+                         screen: AppScreen.VIDEO_PLAYER,
+                         params: {
+                           videoUrl: video.video_url,
+                           title: video.titulo,
+                           category: video.categoria,
+                           duration: video.duracao
+                         }
+                       });
+                     }}
+                   >
+                  {!canAccess && (
+                    <div className="absolute inset-0 bg-black/60 z-10 flex items-center justify-center rounded-t-3xl">
+                      <div className="text-center">
+                        <span className="material-symbols-outlined text-5xl text-white mb-3">lock</span>
+                        <p className="text-white font-semibold mb-2">Conteúdo Premium</p>
+                        <p className="text-white/80 text-sm mb-4">Assine para desbloquear todos os vídeos</p>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onNavigate(AppScreen.ASSINATURA);
+                          }}
+                          className="px-6 py-2 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark transition-colors"
+                        >
+                          Assinar Agora
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  <div className="relative aspect-video">
                   <video 
                     src={video.video_url} 
                     className="w-full h-full object-cover"
@@ -279,7 +330,8 @@ const Treinos: React.FC<TreinosProps> = ({ onNavigate }) => {
                   </div>
                 </div>
               </div>
-            ))
+            );
+            })
           )}
         </div>
       </main>

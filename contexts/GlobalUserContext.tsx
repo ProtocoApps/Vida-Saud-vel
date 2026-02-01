@@ -21,13 +21,22 @@ export const useGlobalUser = () => {
 
 interface GlobalUserProviderProps {
   children: React.ReactNode;
+  user?: any;
 }
 
-export const GlobalUserProvider: React.FC<GlobalUserProviderProps> = ({ children }) => {
+export const GlobalUserProvider: React.FC<GlobalUserProviderProps> = ({ children, user }) => {
   const [userName, setUserName] = useState<string>('');
   const [userEmail, setUserEmail] = useState<string>('');
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      setUserData(user);
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
 
   const setUserData = (user: User) => {
     const nameFromMetadata = user.user_metadata?.name;

@@ -26,6 +26,7 @@ import PagamentoSucesso from './pages/PagamentoSucesso';
 const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<{ screen: AppScreen; params?: any }>({ screen: AppScreen.ONBOARDING });
   const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     // Conta uma sessão quando o app abre e quando volta a ficar visível.
@@ -49,6 +50,7 @@ const App: React.FC = () => {
         if (session?.user) {
           // Usuário já está logado, vai direto para Home
           console.log('App: Usuário logado, indo para HOME');
+          setUser(session.user);
           setCurrentScreen({ screen: AppScreen.HOME });
         } else {
           // Usuário não está logado, verifica se já viu onboarding
@@ -76,8 +78,10 @@ const App: React.FC = () => {
     // Escutar mudanças na sessão
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
+        setUser(session.user);
         setCurrentScreen({ screen: AppScreen.HOME });
       } else {
+        setUser(null);
         const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
         setCurrentScreen({ screen: hasSeenOnboarding ? AppScreen.LOGIN : AppScreen.ONBOARDING });
       }
@@ -160,9 +164,10 @@ const App: React.FC = () => {
   };
 
   return (
-    <GlobalUserProvider>
+    <GlobalUserProvider value={user}>
       <div className="flex justify-center min-h-screen bg-neutral-100 dark:bg-black/20">
         <div className="w-full max-w-[430px] bg-white dark:bg-neutral-dark shadow-2xl relative flex flex-col h-screen overflow-hidden">
+          {user && <input type="hidden" id="user-data" value={JSON.stringify(user)} />}
           {renderScreen()}
         </div>
       </div>
