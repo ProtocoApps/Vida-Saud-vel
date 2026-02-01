@@ -23,13 +23,8 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
     setError(null);
 
     try {
-      const response = await criarPagamentoInfinityPay(
-        userData.email,
-        userData.user_metadata?.name || userData.email
-      );
-
-      // Redireciona para a página de pagamento do InfinitePay
-      window.location.href = response.checkout_url;
+      // Abre o link de pagamento em nova aba
+      window.open('https://loja.infinitepay.io/protocoloapps/vhd7943-descobreville', '_blank');
     } catch (err: any) {
       setError(err.message || 'Erro ao processar pagamento. Tente novamente.');
     } finally {

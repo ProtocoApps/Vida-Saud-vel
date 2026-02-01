@@ -213,18 +213,46 @@ const Treinos: React.FC<TreinosProps> = ({ onNavigate }) => {
             </div>
           ) : (
             // Mostra lista completa apenas se não houver treino programado
-            filteredVideos.map((video) => (
-              <div key={video.id} className="bg-white dark:bg-white/5 rounded-3xl overflow-hidden ios-shadow border border-gray-50 dark:border-white/5 group active:scale-[0.98] transition-all cursor-pointer"
-                   onClick={() => onNavigate({
-                     screen: AppScreen.VIDEO_PLAYER,
-                     params: {
-                       videoUrl: video.video_url,
-                       title: video.titulo,
-                       category: video.categoria,
-                       duration: video.duracao
-                     }
-                   })}
-                 >
+            filteredVideos.map((video, index) => {
+              const isFirstVideo = index === 0;
+              const canAccess = isFirstVideo; // Só primeiro vídeo gratuito
+              
+              return (
+                <div key={video.id} className={`bg-white dark:bg-white/5 rounded-3xl overflow-hidden ios-shadow border border-gray-50 dark:border-white/5 group active:scale-[0.98] transition-all ${canAccess ? 'cursor-pointer' : 'cursor-not-allowed opacity-75'}`}
+                     onClick={() => {
+                       if (!canAccess) {
+                         onNavigate(AppScreen.ASSINATURA);
+                         return;
+                       }
+                       onNavigate({
+                         screen: AppScreen.VIDEO_PLAYER,
+                         params: {
+                           videoUrl: video.video_url,
+                           title: video.titulo,
+                           category: video.categoria,
+                           duration: video.duracao
+                         }
+                       });
+                     }}
+                   >
+                  {!canAccess && (
+                    <div className="absolute inset-0 bg-black/60 z-10 flex items-center justify-center rounded-t-3xl">
+                      <div className="text-center">
+                        <span className="material-symbols-outlined text-5xl text-white mb-3">lock</span>
+                        <p className="text-white font-semibold mb-2">Conteúdo Premium</p>
+                        <p className="text-white/80 text-sm mb-4">Assine para desbloquear todos os vídeos</p>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onNavigate(AppScreen.ASSINATURA);
+                          }}
+                          className="px-6 py-2 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark transition-colors"
+                        >
+                          Assinar Agora
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 <div className="relative aspect-video">
                   <video 
                     src={video.video_url} 
@@ -279,7 +307,8 @@ const Treinos: React.FC<TreinosProps> = ({ onNavigate }) => {
                   </div>
                 </div>
               </div>
-            ))
+            );
+            })
           )}
         </div>
       </main>
