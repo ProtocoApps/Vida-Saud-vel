@@ -20,6 +20,8 @@ import RespiracaoPratica from './pages/RespiracaoPratica';
 import FomeEmocional from './pages/FomeEmocional';
 import VideoPlayer from './pages/VideoPlayer';
 import Historico from './pages/Historico';
+import Assinatura from './pages/Assinatura';
+import PagamentoSucesso from './pages/PagamentoSucesso';
 
 const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<{ screen: AppScreen; params?: any }>({ screen: AppScreen.ONBOARDING });
@@ -148,6 +150,10 @@ const App: React.FC = () => {
         />;
       case AppScreen.HISTORICO:
         return <Historico onNavigate={navigate} />;
+      case AppScreen.ASSINATURA:
+        return <Assinatura onNavigate={navigate} />;
+      case AppScreen.PAGAMENTO_SUCESSO:
+        return <PagamentoSucesso onNavigate={navigate} />;
       default:
         return <Home onNavigate={navigate} />;
     }
