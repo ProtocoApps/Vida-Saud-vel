@@ -36,6 +36,7 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
       console.log('🔍 Status:', status);
       console.log('🔍 Payment ID:', paymentId);
       console.log('🔍 External Reference:', externalReference);
+      console.log('🔍 userData.email:', userData?.email);
       
       // Se tiver status, veio do Mercado Pago
       if (status && paymentId && externalReference) {
@@ -50,6 +51,8 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
             console.log('📊 Status detalhado:', paymentStatus);
             
             if (paymentStatus.status === 'approved') {
+              console.log('🎯 Status confirmado como APPROVED! Ativando assinatura...');
+              
               // Ativa assinatura
               const dataVencimento = new Date();
               dataVencimento.setDate(dataVencimento.getDate() + 30);
@@ -245,7 +248,7 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
           </div>
           <p className="text-xs text-blue-700 dark:text-blue-300">
             Após o pagamento, seu acesso será liberado automaticamente. 
-            O Mercado Pago confirma o pagamento em tempo real.
+            O Mercado Pago confirma o pagamento em tempo real via webhook.
           </p>
         </div>
         </section>

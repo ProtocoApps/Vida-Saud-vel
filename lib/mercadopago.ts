@@ -42,7 +42,8 @@ export async function criarPreferenciaMercadoPago(
       failure: `${origin}/#/assinatura?status=failure&external_reference=${externalReference}`,
       pending: `${origin}/#/assinatura?status=pending&external_reference=${externalReference}`
     },
-    auto_return: 'all',
+    auto_return: 'approved',
+    notification_url: `${origin}/api/mercadopago-webhook`,
     external_reference: externalReference
   };
 
