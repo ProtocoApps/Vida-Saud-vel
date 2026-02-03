@@ -63,8 +63,14 @@ const Perfil: React.FC<PerfilProps> = ({ onNavigate }) => {
     loadUserData();
   }, []);
 
-  const getUserInitial = (name: string) => {
-    return name && name.length > 0 ? name.charAt(0).toUpperCase() : 'U';
+  const getUserInitial = (name: string, email?: string) => {
+    if (name && name.length > 0) {
+      return name.charAt(0).toUpperCase();
+    }
+    if (email && email.length > 0) {
+      return email.charAt(0).toUpperCase();
+    }
+    return 'U';
   };
 
   return (
@@ -91,7 +97,7 @@ const Perfil: React.FC<PerfilProps> = ({ onNavigate }) => {
               </div>
             ) : (
               <div className="size-32 rounded-full border-4 border-gold-500 shadow-xl bg-primary/10 flex items-center justify-center">
-                <span className="text-primary font-bold text-5xl">{getUserInitial(userName)}</span>
+                <span className="text-primary font-bold text-5xl">{getUserInitial(userName, userEmail)}</span>
               </div>
             )}
             <div className="absolute bottom-1 right-1 size-8 bg-primary text-white rounded-full border-2 border-white dark:border-neutral-dark flex items-center justify-center">
@@ -102,10 +108,6 @@ const Perfil: React.FC<PerfilProps> = ({ onNavigate }) => {
           {userEmail && (
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{userEmail}</p>
           )}
-          <div className="flex items-center gap-1.5 mt-1">
-            <span className="material-symbols-outlined text-gold-500 text-sm filled-icon">workspace_premium</span>
-            <span className="text-primary font-bold text-sm">Membro Premium</span>
-          </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 italic max-w-xs">"Equilíbrio entre corpo, emoção e consciência."</p>
         </div>
 
@@ -122,25 +124,6 @@ const Perfil: React.FC<PerfilProps> = ({ onNavigate }) => {
                 ? '—'
                 : `${sessionStats.percentChange >= 0 ? '+' : ''}${sessionStats.percentChange}% este mês`}
             </p>
-          </div>
-        </section>
-
-        <section className="space-y-4">
-          <h3 className="font-serif text-lg font-bold dark:text-white">Plano Atual</h3>
-          <div className="p-6 rounded-3xl bg-gradient-to-br from-primary to-burgundy-900 text-white shadow-2xl shadow-primary/30 relative overflow-hidden group">
-            <div className="relative z-10">
-              <div className="flex justify-between items-center mb-4">
-                <span className="px-3 py-1 bg-white/20 rounded-full text-[10px] font-bold uppercase tracking-widest backdrop-blur-sm">Vitalício</span>
-                <span className="material-symbols-outlined text-gold-500 filled-icon">diamond</span>
-              </div>
-              <h4 className="font-serif text-xl font-bold">Plano Consciência Plena</h4>
-              <p className="text-white/70 text-xs mt-1">Acesso ilimitado a todas as jornadas.</p>
-              <div className="mt-8 pt-4 border-t border-white/20 flex justify-between items-center">
-                <p className="text-[10px] font-medium text-white/50 italic">Próxima renovação: 12 Jan 2025</p>
-                <button className="px-4 py-1.5 border border-white/40 rounded-xl text-xs font-bold hover:bg-white hover:text-primary transition-all">Gerenciar</button>
-              </div>
-            </div>
-            <span className="material-symbols-outlined absolute -bottom-4 -right-4 text-9xl text-white/5 transition-transform group-hover:scale-110">energy_savings_leaf</span>
           </div>
         </section>
 
@@ -188,7 +171,6 @@ const Perfil: React.FC<PerfilProps> = ({ onNavigate }) => {
           >
             Sair
           </button>
-          <button className="text-primary font-bold text-sm uppercase tracking-widest hover:underline">Cancelar Assinatura</button>
           
           {/* Botão secreto para admin - clique 5 vezes rapidamente */}
           <button 

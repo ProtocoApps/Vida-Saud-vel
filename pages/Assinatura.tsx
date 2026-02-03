@@ -121,7 +121,7 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
     checkMercadoPagoParams();
   }, [userData?.email]);
 
-  const handleAssinar = async (metodo: 'pix' | 'cartao') => {
+  const handleAssinar = async () => {
     if (!userData?.email) {
       setError('Usuário não encontrado. Faça login novamente.');
       return;
@@ -198,7 +198,7 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
               </span>
             </div>
             <div className="mb-6">
-              <span className="text-4xl font-bold">R$ 19,90</span>
+              <span className="text-4xl font-bold">R$ 49,90</span>
               <span className="text-lg opacity-90">/mês</span>
             </div>
             <ul className="space-y-3 mb-6">
@@ -226,44 +226,15 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
           </div>
         </section>
 
-        {/* Payment Methods */}
+        {/* Payment Button */}
         <section className="space-y-4">
-          <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-4">
-            Escolha a forma de pagamento:
-          </h3>
-          
           <button
-            onClick={() => handleAssinar('pix')}
+            onClick={() => handleAssinar()}
             disabled={loading}
-            className="w-full p-4 bg-white dark:bg-white/5 border-2 border-gray-200 dark:border-white/10 rounded-2xl flex items-center justify-between hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full p-6 bg-gradient-to-r from-primary to-primary-dark text-white font-bold text-lg rounded-2xl flex items-center justify-center gap-3 hover:from-primary-dark hover:to-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-xl flex items-center justify-center">
-                <span className="material-symbols-outlined text-blue-600 dark:text-blue-400">qr_code_2</span>
-              </div>
-              <div className="text-left">
-                <p className="font-semibold text-gray-900 dark:text-white">Pagar com PIX</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Aprovação imediata</p>
-              </div>
-            </div>
-            <span className="material-symbols-outlined text-gray-400">chevron_right</span>
-          </button>
-
-          <button
-            onClick={() => handleAssinar('cartao')}
-            disabled={loading}
-            className="w-full p-4 bg-white dark:bg-white/5 border-2 border-gray-200 dark:border-white/10 rounded-2xl flex items-center justify-between hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-xl flex items-center justify-center">
-                <span className="material-symbols-outlined text-purple-600 dark:text-purple-400">credit_card</span>
-              </div>
-              <div className="text-left">
-                <p className="font-semibold text-gray-900 dark:text-white">Pagar com Cartão</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Até 12x sem juros</p>
-              </div>
-            </div>
-            <span className="material-symbols-outlined text-gray-400">chevron_right</span>
+            <span className="material-symbols-outlined text-2xl">shopping_cart</span>
+            {loading ? 'Processando...' : 'Assinar Agora por R$ 49,90/mês'}
           </button>
 
         {/* Informações importantes */}
