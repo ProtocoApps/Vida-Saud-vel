@@ -42,7 +42,7 @@ export async function criarPreferenciaMercadoPago(
       failure: `${origin}/#/assinatura?status=failure&external_reference=${externalReference}`,
       pending: `${origin}/#/assinatura?status=pending&external_reference=${externalReference}`
     },
-    auto_return: 'approved',
+    auto_return: 'all',
     external_reference: externalReference
   };
 
