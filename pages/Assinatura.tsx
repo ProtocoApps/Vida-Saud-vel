@@ -143,8 +143,8 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
       console.log('✅ Preferência criada:', preference);
       
       // Abre a página de pagamento do Mercado Pago
-      // Em desenvolvimento usa sandbox, em produção usa init_point
-      const paymentUrl = preference.sandbox_init_point || preference.init_point;
+      // Em produção usa init_point, em desenvolvimento usa sandbox_init_point
+      const paymentUrl = preference.init_point || preference.sandbox_init_point;
       
       console.log('🔗 Abrindo link de pagamento:', paymentUrl);
       window.open(paymentUrl, '_blank');
