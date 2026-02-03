@@ -109,7 +109,8 @@ const Diario: React.FC<DiarioProps> = ({ onNavigate }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { error } = await supabase
+      // 1. Salvar na tabela de reflexões (como já fazia)
+      const { error: reflexaoError } = await supabase
         .from('reflexoes_usuario')
         .upsert({
           user_id: user.id,
@@ -117,8 +118,31 @@ const Diario: React.FC<DiarioProps> = ({ onNavigate }) => {
           data_reflexao: new Date().toISOString().split('T')[0]
         });
 
-      if (error) {
-        console.error('Erro ao salvar reflexão:', error);
+      if (reflexaoError) {
+        console.error('Erro ao salvar reflexão:', reflexaoError);
+      }
+
+      // 2. Salvar também na tabela de atividades para aparecer no histórico
+      const { error: atividadeError } = await supabase
+        .from('atividades')
+        .insert({
+          user_id: user.id,
+          tipo_atividade: 'diario',
+          titulo: 'Reflexão do Dia',
+          descricao: reflexao.trim(),
+          data_atividade: new Date().toISOString(),
+          concluida: true,
+          dados_adicionais: {
+            tipo_foco: 'Profecias',
+            data_reflexao: new Date().toISOString().split('T')[0]
+          }
+        });
+
+      if (atividadeError) {
+        console.error('Erro ao salvar atividade:', atividadeError);
+      }
+
+      if (reflexaoError || atividadeError) {
         alert('Erro ao salvar reflexão. Tente novamente.');
       } else {
         alert('Reflexão salva com sucesso!');
