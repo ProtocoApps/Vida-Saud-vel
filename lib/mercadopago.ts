@@ -37,25 +37,13 @@ export async function criarPreferenciaMercadoPago(
       unit_price: 5.00,
       currency_id: 'BRL'
     }],
-    payer: {
-      email: userEmail,
-      name: userName || userEmail
-    },
-    payment_methods: {
-      excluded_payment_types: [],
-      excluded_payment_methods: [],
-      default_payment_method_id: null,
-      installments: 1
-    },
     back_urls: {
       success: `${origin}/#/assinatura?status=success&external_reference=${externalReference}`,
       failure: `${origin}/#/assinatura?status=failure&external_reference=${externalReference}`,
       pending: `${origin}/#/assinatura?status=pending&external_reference=${externalReference}`
     },
     auto_return: 'approved',
-    external_reference: externalReference,
-    expires: false,
-    date_of_expiration: null
+    external_reference: externalReference
   };
 
   try {
