@@ -1,6 +1,6 @@
 export const MERCADO_PAGO_CONFIG = {
-  publicKey: 'APP_USR-b6fc05b5-d9a1-48b2-8a5a-eb091865269a',
-  accessToken: 'APP_USR-8779072641213000-020212-49a384cfcde54cfaa7f613a034af004f-2336152427',
+  publicKey: 'APP_USR-578ea47a-21e2-422b-b9da-e5cafaf1b53b',
+  accessToken: 'APP_USR-1054796087289670-020314-8ac9ec3978b45bc5395f1789defc0589-3178525807',
   baseUrl: 'https://api.mercadopago.com'
 };
 
