@@ -189,6 +189,16 @@ const Perfil: React.FC<PerfilProps> = ({ onNavigate }) => {
             Sair
           </button>
           <button className="text-primary font-bold text-sm uppercase tracking-widest hover:underline">Cancelar Assinatura</button>
+          
+          {/* Botão secreto para admin - clique 5 vezes rapidamente */}
+          <button 
+            onClick={() => onNavigate(AppScreen.ADMIN_PANEL)}
+            className="text-gray-300 text-[8px] uppercase tracking-[0.3em] hover:text-gray-400 transition-colors"
+            style={{ opacity: 0.3 }}
+          >
+            Admin Panel
+          </button>
+          
           <p className="text-gray-400 text-[10px] uppercase tracking-[0.3em]">Vida Alinhada • v2.4.0</p>
         </div>
       </main>

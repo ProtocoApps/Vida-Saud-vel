@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { AppScreen } from '../types';
 import { useGlobalUser } from '../contexts/GlobalUserContext';
+import { ativarAssinatura } from '../lib/assinatura';
+import { criarAssinaturaDB } from '../lib/assinaturas-db';
 import BottomNav from '../components/BottomNav';
 
 interface PagamentoSucessoProps {
@@ -40,8 +42,8 @@ const PagamentoSucesso: React.FC<PagamentoSucessoProps> = ({ onNavigate }) => {
           userEmail: userData?.email
         });
 
-        // Salvar no localStorage que o usuário é assinante
         if (userData?.email) {
+          // 1. Salvar no localStorage (compatibilidade)
           const dataVencimento = new Date();
           dataVencimento.setDate(dataVencimento.getDate() + 30);
           
@@ -51,6 +53,28 @@ const PagamentoSucesso: React.FC<PagamentoSucessoProps> = ({ onNavigate }) => {
             orderNsu,
             slug
           }));
+
+          // 2. Salvar no banco de dados (novo sistema)
+          if (userData?.id) {
+            try {
+              await criarAssinaturaDB({
+                user_id: userData.id,
+                user_email: userData.email,
+                status: 'ativa',
+                data_inicio: new Date().toISOString(),
+                data_vencimento: dataVencimento.toISOString(),
+                valor: 19.90, // Valor padrão - pode ser dinâmico
+                forma_pagamento: captureMethod === 'pix' ? 'pix' : 'cartao',
+                order_nsu: orderNsu,
+                slug: slug,
+                receipt_url: receiptUrl
+              });
+              console.log('✅ Assinatura salva no banco de dados');
+            } catch (dbError) {
+              console.error('❌ Erro ao salvar no banco:', dbError);
+              // Não falha o processo se o banco falhar
+            }
+          }
         }
 
         setLoading(false);

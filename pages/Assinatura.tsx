@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppScreen } from '../types';
 import { useGlobalUser } from '../contexts/GlobalUserContext';
-import { criarPagamentoInfinityPay } from '../lib/infinitypay';
+import { criarPreferenciaMercadoPago, verificarPagamentoMercadoPago } from '../lib/mercadopago';
+import { verificarAssinatura } from '../lib/assinatura';
 import BottomNav from '../components/BottomNav';
+import PagamentoModal from '../components/PagamentoModal';
 
 interface AssinaturaProps {
   onNavigate: (screen: AppScreen) => void;
@@ -12,6 +14,112 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
   const { userData } = useGlobalUser();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPagamentoModal, setShowPagamentoModal] = useState(false);
+
+  // Detecta quando usuário volta do Mercado Pago
+  useEffect(() => {
+    const checkMercadoPagoParams = async () => {
+      console.log('🔍 INICIANDO VERIFICAÇÃO MERCADO PAGO - userData:', userData);
+      
+      if (!userData?.email) {
+        console.log('❌ Sem userData.email, saindo...');
+        return;
+      }
+
+      // Verifica parâmetros do Mercado Pago
+      const urlParams = new URLSearchParams(window.location.search);
+      const status = urlParams.get('status');
+      const paymentId = urlParams.get('payment_id');
+      const externalReference = urlParams.get('external_reference');
+      
+      console.log('🔍 URL completa:', window.location.href);
+      console.log('🔍 Status:', status);
+      console.log('🔍 Payment ID:', paymentId);
+      console.log('🔍 External Reference:', externalReference);
+      
+      // Se tiver status, veio do Mercado Pago
+      if (status && paymentId && externalReference) {
+        console.log('🎉 Detectado retorno do Mercado Pago!');
+        
+        try {
+          if (status === 'approved') {
+            console.log('✅ Pagamento APROVADO pelo Mercado Pago!');
+            
+            // Verifica status detalhado do pagamento
+            const paymentStatus = await verificarPagamentoMercadoPago(paymentId);
+            console.log('📊 Status detalhado:', paymentStatus);
+            
+            if (paymentStatus.status === 'approved') {
+              // Ativa assinatura
+              const dataVencimento = new Date();
+              dataVencimento.setDate(dataVencimento.getDate() + 30);
+              
+              // 1. Salva no localStorage
+              const assinaturaData = {
+                ativa: true,
+                dataVencimento: dataVencimento.toISOString(),
+                orderNsu: paymentId,
+                slug: externalReference
+              };
+              
+              localStorage.setItem(`assinatura_${userData.email}`, JSON.stringify(assinaturaData));
+              console.log('✅ Salvo no localStorage:', assinaturaData);
+
+              // 2. Salva no banco se tiver user_id
+              if (userData?.id) {
+                try {
+                  const { criarAssinaturaDB } = await import('../lib/assinaturas-db');
+                  
+                  const dbData = {
+                    user_id: userData.id,
+                    user_email: userData.email,
+                    status: 'ativa' as const,
+                    data_inicio: new Date().toISOString(),
+                    data_vencimento: dataVencimento.toISOString(),
+                    valor: paymentStatus.transaction_amount,
+                    forma_pagamento: paymentStatus.payment_type_id === 'credit_card' ? 'cartao' as const : 'pix' as const,
+                    order_nsu: paymentId,
+                    slug: externalReference
+                  };
+                  
+                  const result = await criarAssinaturaDB(dbData);
+                  console.log('✅ ASSINATURA SALVA NO BANCO:', result);
+                  
+                } catch (dbError) {
+                  console.error('❌ Erro ao salvar no banco:', dbError);
+                }
+              }
+
+              // Mostra modal de sucesso
+              setShowPagamentoModal(true);
+              
+            } else {
+              console.log('❌ Status não é approved:', paymentStatus.status);
+              setError('❌ Pagamento não foi aprovado. Tente novamente.');
+            }
+          } else if (status === 'pending') {
+            console.log('⏳ Pagamento pendente...');
+            setError('⏳ Pagamento em processamento. Aguarde a confirmação.');
+          } else if (status === 'failure') {
+            console.log('❌ Pagamento falhou');
+            setError('❌ Pagamento falhou. Tente novamente.');
+          }
+          
+        } catch (error) {
+          console.error('❌ Erro ao verificar pagamento:', error);
+          setError('❌ Erro ao confirmar pagamento. Tente novamente.');
+        }
+        
+        // Limpa os parâmetros da URL
+        console.log('🧹 Limpando parâmetros da URL...');
+        window.history.replaceState({}, '', window.location.pathname);
+      } else {
+        console.log('ℹ️ Nenhum parâmetro do Mercado Pago detectado');
+      }
+    };
+
+    checkMercadoPagoParams();
+  }, [userData?.email]);
 
   const handleAssinar = async (metodo: 'pix' | 'cartao') => {
     if (!userData?.email) {
@@ -23,15 +131,33 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
     setError(null);
 
     try {
-      // Abre o link de pagamento em nova aba
-      window.open('https://loja.infinitepay.io/protocoloapps/vhd7943-descobreville', '_blank');
+      console.log('🚀 Criando preferência no Mercado Pago...');
+      
+      // Cria preferência de pagamento no Mercado Pago
+      const preference = await criarPreferenciaMercadoPago(
+        userData.email, 
+        userData.name, 
+        window.location.origin
+      );
+      
+      console.log('✅ Preferência criada:', preference);
+      
+      // Abre a página de pagamento do Mercado Pago
+      // Em desenvolvimento usa sandbox, em produção usa init_point
+      const paymentUrl = preference.sandbox_init_point || preference.init_point;
+      
+      console.log('🔗 Abrindo link de pagamento:', paymentUrl);
+      window.open(paymentUrl, '_blank');
+      
     } catch (err: any) {
+      console.error('❌ Erro ao criar pagamento:', err);
       setError(err.message || 'Erro ao processar pagamento. Tente novamente.');
     } finally {
       setLoading(false);
     }
   };
 
+  
   return (
     <div className="flex flex-col h-full bg-white dark:bg-neutral-dark">
       {/* Header */}
@@ -139,6 +265,18 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
             </div>
             <span className="material-symbols-outlined text-gray-400">chevron_right</span>
           </button>
+
+        {/* Informações importantes */}
+        <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="material-symbols-outlined text-blue-600 dark:text-blue-400">info</span>
+            <p className="text-sm font-semibold text-blue-800 dark:text-blue-200">Pagamento Mercado Pago</p>
+          </div>
+          <p className="text-xs text-blue-700 dark:text-blue-300">
+            Após o pagamento, seu acesso será liberado automaticamente. 
+            O Mercado Pago confirma o pagamento em tempo real.
+          </p>
+        </div>
         </section>
 
         {/* Security Info */}
@@ -150,7 +288,7 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
             </span>
           </div>
           <p className="text-xs text-gray-600 dark:text-gray-400">
-            Seus dados são protegidos pela Infinity Pay, empresa líder em pagamentos digitais no Brasil.
+            Seus dados são protegidos pelo Mercado Pago, empresa líder em pagamentos digitais na América Latina.
           </p>
         </section>
 
@@ -167,6 +305,11 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
 
       {/* Bottom Navigation */}
       <BottomNav currentScreen={AppScreen.ASSINATURA} onNavigate={onNavigate} />
+
+      {/* Modal de pagamento automático */}
+      {showPagamentoModal && (
+        <PagamentoModal onClose={() => setShowPagamentoModal(false)} />
+      )}
     </div>
   );
 };
