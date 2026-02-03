@@ -198,7 +198,7 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
               </span>
             </div>
             <div className="mb-6">
-              <span className="text-4xl font-bold">R$ 1,00</span>
+              <span className="text-4xl font-bold">R$ 49,90</span>
               <span className="text-lg opacity-90">/mês</span>
             </div>
             <ul className="space-y-3 mb-6">
@@ -234,7 +234,7 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
             className="w-full p-6 bg-gradient-to-r from-primary to-primary-dark text-white font-bold text-lg rounded-2xl flex items-center justify-center gap-3 hover:from-primary-dark hover:to-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
           >
             <span className="material-symbols-outlined text-2xl">shopping_cart</span>
-            {loading ? 'Processando...' : 'Assinar Agora por R$ 1,00/mês'}
+            {loading ? 'Processando...' : 'Assinar Agora por R$ 49,90/mês'}
           </button>
 
         {/* Informações importantes */}
