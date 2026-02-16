@@ -47,7 +47,13 @@ export async function criarPreferenciaMercadoPago(
     external_reference: externalReference,
     expires: false,
     expiration_date_from: null,
-    expiration_date_to: null
+    expiration_date_to: null,
+    // Garante que o botão "Voltar" volte para a página de assinatura
+    redirect_urls: {
+      success: `${origin}/#/assinatura?success=true`,
+      failure: `${origin}/#/assinatura?failure=true`,
+      pending: `${origin}/#/assinatura?pending=true`
+    }
   };
 
   try {
