@@ -532,20 +532,6 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
             {loading ? 'Processando...' : 'Assinar Agora por R$ 1,00/mês'}
           </button>
 
-          {/* Botão para verificar pagamentos */}
-          {userData?.email && (
-            <button
-              onClick={() => {
-                const urlParams = new URLSearchParams(window.location.search);
-                const paymentId = urlParams.get('payment_id');
-                buscarPagamentosRecentes(userData.email, paymentId || undefined);
-              }}
-              className="w-full p-4 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-300 font-semibold rounded-2xl transition-all"
-            >
-              Verificar Pagamento Realizado
-            </button>
-          )}
-
         </section>
 
 
