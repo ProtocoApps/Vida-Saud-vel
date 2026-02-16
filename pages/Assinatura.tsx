@@ -32,15 +32,9 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
           
           if (specificPayment.status === 'approved') {
             console.log('🎉 Pagamento específico APROVADO!');
-            try {
-              await ativarAssinaturaNoSupabase(specificPayment, specificPayment.external_reference, userData);
-              setShowPagamentoModal(true);
-              return true;
-            } catch (dbError) {
-              console.error('❌ Erro ao salvar no Supabase, mas pagamento foi aprovado:', dbError);
-              setShowPagamentoModal(true);
-              return true; // Considera como sucesso mesmo com erro no DB
-            }
+            await salvarAssinatura(specificPayment);
+            setShowPagamentoModal(true);
+            return true; // Considera como sucesso mesmo com erro no DB
           }
         } catch (error) {
           console.error('❌ Erro ao buscar pagamento específico:', error);
@@ -79,9 +73,9 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
         
         // Ativa assinatura
         try {
-          await ativarAssinaturaNoSupabase(pagamento, pagamento.external_reference, userData);
+          await salvarAssinatura(pagamento);
           setShowPagamentoModal(true);
-          return true;
+          return true; // Considera como sucesso mesmo com erro no DB
         } catch (dbError) {
           console.error('❌ Erro ao salvar no Supabase, mas pagamento foi aprovado:', dbError);
           setShowPagamentoModal(true);
@@ -95,52 +89,60 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
       return false;
     }
   };
-  const ativarAssinaturaNoSupabase = async (paymentStatus: any, externalReference: string, userData: any) => {
-    console.log('🎯 Ativando assinatura no Supabase...');
-    console.log('📊 Dados do pagamento:', JSON.stringify(paymentStatus, null, 2));
-    console.log('👤 Dados do usuário:', JSON.stringify(userData, null, 2));
-    
-    // Ativa assinatura no Supabase
-    const dataVencimento = new Date();
-    dataVencimento.setDate(dataVencimento.getDate() + 30);
-    
-    const dbData = {
-      user_id: userData?.id || null,
-      user_email: userData.email,
-      status: 'ativa' as const,
-      data_inicio: new Date().toISOString(),
-      data_vencimento: dataVencimento.toISOString(),
-      valor: paymentStatus.transaction_amount || paymentStatus.amount,
-      forma_pagamento: paymentStatus.payment_type_id === 'credit_card' ? 'cartao' as const : 'pix' as const,
-      order_nsu: paymentStatus.payment_id || paymentStatus.id || paymentStatus.collection_id,
-      slug: externalReference
-    };
-    
-    console.log('💾 Dados para salvar no Supabase:', JSON.stringify(dbData, null, 2));
+  // Função simples e direta para salvar assinatura
+  const salvarAssinatura = async (paymentData: any) => {
+    console.log('💾 SALVANDO ASSINATURA - MODO SIMPLES');
     
     try {
-      const { criarAssinaturaDB } = await import('../lib/assinaturas-db');
-      console.log('🔧 Chamando criarAssinaturaDB...');
-      const result = await criarAssinaturaDB(dbData);
-      console.log('✅ ASSINATURA SALVA NO SUPABASE:', result);
-      return result;
-    } catch (dbError) {
-      console.error('❌ Erro detalhado ao salvar no Supabase:', dbError);
-      console.error('❌ Mensagem do erro:', dbError.message);
-      console.error('❌ Código do erro:', dbError.code);
-      console.error('❌ Detalhes:', dbError.details);
+      // Tenta Supabase primeiro
+      const response = await fetch('https://bqiklofbfiatcdpenpyy.supabase.co/rest/v1/assinaturas', {
+        method: 'POST',
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxaWtsb2ZiZmlhdGNkcGVucHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg5NDgxOTcsImV4cCI6MjA4NDUyNDE5N30._dNpdz9UjPijmx0QumORBYRxvUHcErFtdQ4KiFkpm6s',
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({
+          user_email: userData.email,
+          user_id: userData?.id || null,
+          status: 'ativa',
+          data_inicio: new Date().toISOString(),
+          data_vencimento: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          valor: paymentData.transaction_amount || 1.00,
+          forma_pagamento: paymentData.payment_type_id === 'credit_card' ? 'cartao' : 'pix',
+          order_nsu: paymentData.payment_id || paymentData.id,
+          slug: paymentData.external_reference || 'manual'
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ SALVO NO SUPABASE (REST):', data);
+        return true;
+      } else {
+        const error = await response.text();
+        console.error('❌ Erro REST Supabase:', error);
+        
+        // Fallback localStorage
+        localStorage.setItem(`assinatura_${userData.email}`, JSON.stringify({
+          ativa: true,
+          dataVencimento: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          orderNsu: paymentData.payment_id || paymentData.id
+        }));
+        console.log('✅ SALVO NO LOCALSTORAGE');
+        return true;
+      }
+    } catch (error) {
+      console.error('❌ Erro geral:', error);
       
-      // Fallback: salva no localStorage
-      console.log('💾 Usando fallback localStorage...');
-      const assinaturaData = {
+      // Fallback localStorage
+      localStorage.setItem(`assinatura_${userData.email}`, JSON.stringify({
         ativa: true,
-        dataVencimento: dataVencimento.toISOString(),
-        orderNsu: paymentStatus.payment_id || paymentStatus.id || paymentStatus.collection_id,
-        slug: externalReference
-      };
-      localStorage.setItem(`assinatura_${userData.email}`, JSON.stringify(assinaturaData));
-      console.log('✅ Salvo no localStorage como fallback:', assinaturaData);
-      throw dbError; // Re-lança o erro para ser tratado acima
+        dataVencimento: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        orderNsu: paymentData.payment_id || paymentData.id
+      }));
+      console.log('✅ SALVO NO LOCALSTORAGE (fallback)');
+      return true;
     }
   };
 
@@ -195,7 +197,7 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
             
             if (paymentStatus.status === 'approved') {
               console.log('🎯 Status confirmado como APPROVED! Ativando assinatura...');
-              await ativarAssinaturaNoSupabase(paymentStatus, externalReference, userData);
+              await salvarAssinatura(paymentStatus);
               setShowPagamentoModal(true);
             } else {
               console.log('❌ Status não é approved:', paymentStatus.status);
@@ -221,7 +223,7 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
                 if (paymentStatus.status === 'approved') {
                   console.log('🎉 Pagamento APROVADO! Ativando assinatura...');
                   try {
-                    await ativarAssinaturaNoSupabase(paymentStatus, externalReference, userData);
+                    await salvarAssinatura(paymentStatus);
                     setShowPagamentoModal(true);
                     setError(null);
                   } catch (dbError) {
@@ -243,7 +245,7 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
                       if (secondCheck.status === 'approved') {
                         console.log('🎉 Pagamento APROVADO na segunda verificação!');
                         try {
-                          await ativarAssinaturaNoSupabase(secondCheck, externalReference, userData);
+                          await salvarAssinatura(secondCheck);
                           setShowPagamentoModal(true);
                           setError(null);
                         } catch (dbError) {
@@ -265,7 +267,7 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
                             if (thirdCheck.status === 'approved') {
                               console.log('🎉 Pagamento APROVADO na terceira verificação!');
                               try {
-                                await ativarAssinaturaNoSupabase(thirdCheck, externalReference, userData);
+                                await salvarAssinatura(thirdCheck);
                                 setShowPagamentoModal(true);
                                 setError(null);
                               } catch (dbError) {
