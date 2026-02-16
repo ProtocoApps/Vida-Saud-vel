@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AppScreen } from '../types';
 import { useGlobalUser } from '../contexts/GlobalUserContext';
-import { criarPreferenciaMercadoPago, verificarPagamentoMercadoPago } from '../lib/mercadopago';
+import { criarPreferenciaMercadoPago, verificarPagamentoMercadoPago, MERCADO_PAGO_CONFIG } from '../lib/mercadopago';
 import { verificarAssinatura } from '../lib/assinatura';
 import BottomNav from '../components/BottomNav';
 import PagamentoModal from '../components/PagamentoModal';
@@ -15,6 +15,90 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPagamentoModal, setShowPagamentoModal] = useState(false);
+
+  // Função para buscar pagamentos recentes do usuário
+  const buscarPagamentosRecentes = async (userEmail: string) => {
+    try {
+      console.log('🔍 Buscando pagamentos recentes para:', userEmail);
+      
+      // Busca pagamentos nos últimos 10 minutos
+      const response = await fetch(`${MERCADO_PAGO_CONFIG.baseUrl}/v1/payments/search`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${MERCADO_PAGO_CONFIG.accessToken}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erro ao buscar pagamentos: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('📊 Pagamentos encontrados:', data);
+
+      // Filtra pagamentos do usuário nos últimos 10 minutos
+      const dezMinutosAtras = new Date(Date.now() - 10 * 60 * 1000);
+      const pagamentosRecentes = data.results.filter((payment: any) => {
+        const dataPagamento = new Date(payment.date_created);
+        return payment.payer?.email === userEmail && 
+               dataPagamento > dezMinutosAtras &&
+               payment.status === 'approved';
+      });
+
+      console.log('💰 Pagamentos aprovados recentes:', pagamentosRecentes);
+
+      if (pagamentosRecentes.length > 0) {
+        const pagamento = pagamentosRecentes[0];
+        console.log('🎉 Pagamento aprovado encontrado!', pagamento);
+        
+        // Ativa assinatura
+        await ativarAssinaturaNoSupabase(pagamento, pagamento.external_reference, userData);
+        setShowPagamentoModal(true);
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('❌ Erro ao buscar pagamentos recentes:', error);
+      return false;
+    }
+  };
+  const ativarAssinaturaNoSupabase = async (paymentStatus: any, externalReference: string, userData: any) => {
+    console.log('🎯 Ativando assinatura no Supabase...');
+    
+    // Ativa assinatura no Supabase
+    const dataVencimento = new Date();
+    dataVencimento.setDate(dataVencimento.getDate() + 30);
+    
+    const dbData = {
+      user_id: userData?.id || null,
+      user_email: userData.email,
+      status: 'ativa' as const,
+      data_inicio: new Date().toISOString(),
+      data_vencimento: dataVencimento.toISOString(),
+      valor: paymentStatus.transaction_amount,
+      forma_pagamento: paymentStatus.payment_type_id === 'credit_card' ? 'cartao' as const : 'pix' as const,
+      order_nsu: paymentStatus.payment_id || paymentStatus.id,
+      slug: externalReference
+    };
+    
+    try {
+      const { criarAssinaturaDB } = await import('../lib/assinaturas-db');
+      const result = await criarAssinaturaDB(dbData);
+      console.log('✅ ASSINATURA SALVA NO SUPABASE:', result);
+    } catch (dbError) {
+      console.error('❌ Erro ao salvar no Supabase:', dbError);
+      // Fallback: salva no localStorage
+      const assinaturaData = {
+        ativa: true,
+        dataVencimento: dataVencimento.toISOString(),
+        orderNsu: paymentStatus.payment_id || paymentStatus.id,
+        slug: externalReference
+      };
+      localStorage.setItem(`assinatura_${userData.email}`, JSON.stringify(assinaturaData));
+      console.log('✅ Salvo no localStorage como fallback:', assinaturaData);
+    }
+  };
 
   // Detecta quando usuário volta do Mercado Pago
   useEffect(() => {
@@ -61,50 +145,35 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
             
             if (paymentStatus.status === 'approved') {
               console.log('🎯 Status confirmado como APPROVED! Ativando assinatura...');
-              
-              // Ativa assinatura no Supabase
-              const dataVencimento = new Date();
-              dataVencimento.setDate(dataVencimento.getDate() + 30);
-              
-              const dbData = {
-                user_id: userData?.id || null,
-                user_email: userData.email,
-                status: 'ativa' as const,
-                data_inicio: new Date().toISOString(),
-                data_vencimento: dataVencimento.toISOString(),
-                valor: paymentStatus.transaction_amount,
-                forma_pagamento: paymentStatus.payment_type_id === 'credit_card' ? 'cartao' as const : 'pix' as const,
-                order_nsu: paymentId,
-                slug: externalReference
-              };
-              
-              try {
-                const { criarAssinaturaDB } = await import('../lib/assinaturas-db');
-                const result = await criarAssinaturaDB(dbData);
-                console.log('✅ ASSINATURA SALVA NO SUPABASE:', result);
-              } catch (dbError) {
-                console.error('❌ Erro ao salvar no Supabase:', dbError);
-                // Fallback: salva no localStorage
-                const assinaturaData = {
-                  ativa: true,
-                  dataVencimento: dataVencimento.toISOString(),
-                  orderNsu: paymentId,
-                  slug: externalReference
-                };
-                localStorage.setItem(`assinatura_${userData.email}`, JSON.stringify(assinaturaData));
-                console.log('✅ Salvo no localStorage como fallback:', assinaturaData);
-              }
-
-              // Mostra modal de sucesso
+              await ativarAssinaturaNoSupabase(paymentStatus, externalReference, userData);
               setShowPagamentoModal(true);
-              
             } else {
               console.log('❌ Status não é approved:', paymentStatus.status);
               setError('❌ Pagamento não foi aprovado. Tente novamente.');
             }
           } else if (status === 'pending') {
-            console.log('⏳ Pagamento pendente...');
-            setError('⏳ Pagamento em processamento. Aguarde a confirmação.');
+            console.log('⏳ Pagamento pendente... Verificando status real...');
+            setError('⏳ Verificando status do pagamento...');
+            
+            // Para Pix, verificar se já foi aprovado (as vezes demora)
+            setTimeout(async () => {
+              try {
+                const paymentStatus = await verificarPagamentoMercadoPago(paymentId);
+                console.log('🔄 Status verificado:', paymentStatus.status);
+                
+                if (paymentStatus.status === 'approved') {
+                  console.log('🎉 Pagamento APROVADO! Ativando assinatura...');
+                  await ativarAssinaturaNoSupabase(paymentStatus, externalReference, userData);
+                  setShowPagamentoModal(true);
+                  setError(null);
+                } else {
+                  setError('⏳ Pagamento ainda em processamento. Por favor, aguarde alguns minutos ou atualize a página.');
+                }
+              } catch (error) {
+                console.error('❌ Erro ao verificar pagamento:', error);
+                setError('❌ Erro ao verificar pagamento. Tente atualizar a página.');
+              }
+            }, 3000); // Verifica após 3 segundos
           } else if (status === 'failure') {
             console.log('❌ Pagamento falhou');
             setError('❌ Pagamento falhou. Tente novamente.');
@@ -120,6 +189,13 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
         window.history.replaceState({}, '', window.location.pathname);
       } else {
         console.log('ℹ️ Nenhum parâmetro do Mercado Pago detectado');
+        
+        // Verifica se há pagamentos recentes mesmo sem parâmetros
+        console.log('🔍 Verificando pagamentos recentes mesmo sem parâmetros...');
+        const encontrou = await buscarPagamentosRecentes(userData.email);
+        if (encontrou) {
+          console.log('🎉 Pagamento encontrado e ativado!');
+        }
       }
     };
 
@@ -176,7 +252,15 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
       <main className="flex-1 overflow-y-auto p-4 pb-24">
         {error && (
           <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
-            <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+            <p className="text-red-600 dark:text-red-400 text-sm mb-2">{error}</p>
+            {error.includes('processamento') && (
+              <button
+                onClick={() => window.location.reload()}
+                className="text-red-600 dark:text-red-400 text-sm underline hover:no-underline"
+              >
+                Verificar novamente
+              </button>
+            )}
           </div>
         )}
 
@@ -241,6 +325,16 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
             <span className="material-symbols-outlined text-2xl">shopping_cart</span>
             {loading ? 'Processando...' : 'Assinar Agora por R$ 1,00/mês'}
           </button>
+
+          {/* Botão para verificar pagamentos */}
+          {userData?.email && (
+            <button
+              onClick={() => buscarPagamentosRecentes(userData.email)}
+              className="w-full p-4 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-300 font-semibold rounded-2xl transition-all"
+            >
+              Verificar Pagamento Realizado
+            </button>
+          )}
 
         </section>
 
