@@ -35,9 +35,9 @@ const Treinos: React.FC<TreinosProps> = ({ onNavigate }) => {
 
   useEffect(() => {
     const checkAssinatura = async () => {
-      if (userData?.email) {
+      if (userData?.email || userData?.id) {
         try {
-          const assinatura = await verificarAssinatura(userData.email);
+          const assinatura = await verificarAssinatura(userData.email, userData.id);
           setIsAssinante(!!assinatura);
         } catch (error) {
           console.error('Erro ao verificar assinatura:', error);

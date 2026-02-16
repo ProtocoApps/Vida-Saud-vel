@@ -53,44 +53,37 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
             if (paymentStatus.status === 'approved') {
               console.log('🎯 Status confirmado como APPROVED! Ativando assinatura...');
               
-              // Ativa assinatura
+              // Ativa assinatura no Supabase
               const dataVencimento = new Date();
               dataVencimento.setDate(dataVencimento.getDate() + 30);
               
-              // 1. Salva no localStorage
-              const assinaturaData = {
-                ativa: true,
-                dataVencimento: dataVencimento.toISOString(),
-                orderNsu: paymentId,
+              const dbData = {
+                user_id: userData?.id || null,
+                user_email: userData.email,
+                status: 'ativa' as const,
+                data_inicio: new Date().toISOString(),
+                data_vencimento: dataVencimento.toISOString(),
+                valor: paymentStatus.transaction_amount,
+                forma_pagamento: paymentStatus.payment_type_id === 'credit_card' ? 'cartao' as const : 'pix' as const,
+                order_nsu: paymentId,
                 slug: externalReference
               };
               
-              localStorage.setItem(`assinatura_${userData.email}`, JSON.stringify(assinaturaData));
-              console.log('✅ Salvo no localStorage:', assinaturaData);
-
-              // 2. Salva no banco se tiver user_id
-              if (userData?.id) {
-                try {
-                  const { criarAssinaturaDB } = await import('../lib/assinaturas-db');
-                  
-                  const dbData = {
-                    user_id: userData.id,
-                    user_email: userData.email,
-                    status: 'ativa' as const,
-                    data_inicio: new Date().toISOString(),
-                    data_vencimento: dataVencimento.toISOString(),
-                    valor: paymentStatus.transaction_amount,
-                    forma_pagamento: paymentStatus.payment_type_id === 'credit_card' ? 'cartao' as const : 'pix' as const,
-                    order_nsu: paymentId,
-                    slug: externalReference
-                  };
-                  
-                  const result = await criarAssinaturaDB(dbData);
-                  console.log('✅ ASSINATURA SALVA NO BANCO:', result);
-                  
-                } catch (dbError) {
-                  console.error('❌ Erro ao salvar no banco:', dbError);
-                }
+              try {
+                const { criarAssinaturaDB } = await import('../lib/assinaturas-db');
+                const result = await criarAssinaturaDB(dbData);
+                console.log('✅ ASSINATURA SALVA NO SUPABASE:', result);
+              } catch (dbError) {
+                console.error('❌ Erro ao salvar no Supabase:', dbError);
+                // Fallback: salva no localStorage
+                const assinaturaData = {
+                  ativa: true,
+                  dataVencimento: dataVencimento.toISOString(),
+                  orderNsu: paymentId,
+                  slug: externalReference
+                };
+                localStorage.setItem(`assinatura_${userData.email}`, JSON.stringify(assinaturaData));
+                console.log('✅ Salvo no localStorage como fallback:', assinaturaData);
               }
 
               // Mostra modal de sucesso
@@ -201,7 +194,7 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
               </span>
             </div>
             <div className="mb-6">
-              <span className="text-4xl font-bold">R$ 49,00</span>
+              <span className="text-4xl font-bold">R$ 1,00</span>
               <span className="text-lg opacity-90">/mês</span>
             </div>
             <ul className="space-y-3 mb-6">
@@ -237,7 +230,7 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
             className="w-full p-6 bg-primary hover:bg-primary-dark text-white font-bold text-lg rounded-2xl flex items-center justify-center gap-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
           >
             <span className="material-symbols-outlined text-2xl">shopping_cart</span>
-            {loading ? 'Processando...' : 'Assinar Agora por R$ 49,00/mês'}
+            {loading ? 'Processando...' : 'Assinar Agora por R$ 1,00/mês'}
           </button>
 
         </section>

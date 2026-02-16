@@ -34,7 +34,7 @@ export async function criarPreferenciaMercadoPago(
     items: [{
       title: 'Assinatura Mensal Vida Alinhada',
       quantity: 1,
-      unit_price: 49.00,
+      unit_price: 1.00,
       currency_id: 'BRL'
     }],
     back_urls: {

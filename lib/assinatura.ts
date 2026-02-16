@@ -1,3 +1,6 @@
+import { supabase } from './supabase';
+import { buscarAssinaturaAtiva, buscarAssinaturaPorEmail } from './assinaturas-db';
+
 export interface Assinatura {
   ativa: boolean;
   dataVencimento: string;
@@ -5,24 +8,51 @@ export interface Assinatura {
   slug?: string;
 }
 
-export async function verificarAssinatura(userEmail: string): Promise<Assinatura | null> {
+export async function verificarAssinatura(userEmail: string, userId?: string): Promise<Assinatura | null> {
   try {
-    const assinaturaStr = localStorage.getItem(`assinatura_${userEmail}`);
-    if (!assinaturaStr) return null;
+    // Primeiro tenta buscar do Supabase (fonte principal)
+    if (userId) {
+      const assinaturaDB = await buscarAssinaturaAtiva(userId);
+      if (assinaturaDB) {
+        return {
+          ativa: true,
+          dataVencimento: assinaturaDB.data_vencimento,
+          orderNsu: assinaturaDB.order_nsu,
+          slug: assinaturaDB.slug
+        };
+      }
+    }
 
-    const assinatura: Assinatura = JSON.parse(assinaturaStr);
-    
-    // Verifica se a assinatura ainda está válida
-    const dataVencimento = new Date(assinatura.dataVencimento);
-    const agora = new Date();
-    
-    if (dataVencimento < agora) {
-      // Assinatura expirou, remove do localStorage
-      localStorage.removeItem(`assinatura_${userEmail}`);
-      return null;
+    // Fallback para busca por email
+    const assinaturaEmail = await buscarAssinaturaPorEmail(userEmail);
+    if (assinaturaEmail) {
+      return {
+        ativa: true,
+        dataVencimento: assinaturaEmail.data_vencimento,
+        orderNsu: assinaturaEmail.order_nsu,
+        slug: assinaturaEmail.slug
+      };
+    }
+
+    // Se não encontrou no Supabase, verifica o localStorage (legado)
+    const assinaturaStr = localStorage.getItem(`assinatura_${userEmail}`);
+    if (assinaturaStr) {
+      const assinatura: Assinatura = JSON.parse(assinaturaStr);
+      
+      // Verifica se a assinatura ainda está válida
+      const dataVencimento = new Date(assinatura.dataVencimento);
+      const agora = new Date();
+      
+      if (dataVencimento < agora) {
+        // Assinatura expirou, remove do localStorage
+        localStorage.removeItem(`assinatura_${userEmail}`);
+        return null;
+      }
+      
+      return assinatura;
     }
     
-    return assinatura;
+    return null;
   } catch (error) {
     console.error('Erro ao verificar assinatura:', error);
     return null;
