@@ -16,21 +16,19 @@ export interface AssinaturaDB {
   updated_at: string;
 }
 
-// Criar nova assinatura no banco
+// Criar nova assinatura no banco (usa sessão do cliente para RLS: auth.uid() = user_id)
 export async function criarAssinaturaDB(assinatura: Omit<AssinaturaDB, 'id' | 'created_at' | 'updated_at'>) {
-  try {
-    const { data, error } = await supabase
-      .from('assinaturas')
-      .insert([assinatura])
-      .select()
-      .single();
+  const { data, error } = await supabase
+    .from('assinaturas')
+    .insert([assinatura])
+    .select()
+    .single();
 
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    console.error('Erro ao criar assinatura no banco:', error);
-    throw error;
+  if (error) {
+    console.error('Erro ao criar assinatura no banco:', error.code, error.message, error);
+    throw Object.assign(new Error(error.message), { code: error.code, details: error.details });
   }
+  return data;
 }
 
 // Buscar assinatura ativa do usuário

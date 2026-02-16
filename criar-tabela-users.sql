@@ -41,6 +41,9 @@ CREATE TRIGGER update_users_updated_at
     BEFORE UPDATE ON public.users
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Dar permissões para o usuário anon (necessário para cadastro)
+-- Permissões para anon (cadastro sem login) e authenticated (usuário logado)
 GRANT INSERT ON public.users TO anon;
 GRANT SELECT ON public.users TO anon;
+GRANT SELECT ON public.users TO authenticated;
+GRANT INSERT ON public.users TO authenticated;
+GRANT UPDATE ON public.users TO authenticated;

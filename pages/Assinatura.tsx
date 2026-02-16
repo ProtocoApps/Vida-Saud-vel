@@ -4,6 +4,7 @@ import { useGlobalUser } from '../contexts/GlobalUserContext';
 import { criarPreferenciaMercadoPago, verificarPagamentoMercadoPago, MERCADO_PAGO_CONFIG } from '../lib/mercadopago';
 import { verificarAssinatura } from '../lib/assinatura';
 import { criarAssinaturaDB } from '../lib/assinaturas-db';
+import { supabase } from '../lib/supabase';
 import BottomNav from '../components/BottomNav';
 import PagamentoModal from '../components/PagamentoModal';
 
@@ -17,6 +18,7 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
   const [error, setError] = useState<string | null>(null);
   const [showPagamentoModal, setShowPagamentoModal] = useState(false);
   const [aguardandoPix, setAguardandoPix] = useState(false);
+  const [saveWarning, setSaveWarning] = useState<string | null>(null);
 
   // Função para buscar pagamentos recentes do usuário
   const buscarPagamentosRecentes = async (userEmail: string, paymentId?: string) => {
@@ -91,14 +93,14 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
       return false;
     }
   };
-  // Salva assinatura no Supabase usando o cliente com sessão (RLS permite INSERT com auth.uid())
+  // Salva assinatura no Supabase (RLS exige auth.uid() = user_id; sessão pode demorar ao voltar da aba)
   const salvarAssinatura = async (paymentData: any) => {
-    console.log('💾 SALVANDO ASSINATURA NO SUPABASE (com sessão)');
+    console.log('💾 SALVANDO ASSINATURA NO SUPABASE');
+    setSaveWarning(null);
+
     const dataInicio = new Date().toISOString();
     const dataVencimento = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-    const payload = {
-      user_email: userData.email,
-      user_id: userData?.id ?? null,
+    const basePayload = {
       status: 'ativa' as const,
       data_inicio: dataInicio,
       data_vencimento: dataVencimento,
@@ -108,25 +110,55 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
       slug: paymentData.external_reference || 'manual'
     };
 
-    try {
+    const tryInsert = async (): Promise<{ userId: string | null; userEmail: string }> => {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const userId = authUser?.id ?? userData?.id ?? null;
+      const userEmail = authUser?.email ?? userData?.email ?? '';
+      const payload = { ...basePayload, user_email: userEmail, user_id: userId };
       await criarAssinaturaDB(payload);
+      return { userId, userEmail };
+    };
+
+    try {
+      let result = await tryInsert();
       console.log('✅ SALVO NO SUPABASE');
-      // Atualiza cache local para desbloqueio imediato
-      localStorage.setItem(`assinatura_${userData.email}`, JSON.stringify({
+      localStorage.setItem(`assinatura_${result.userEmail}`, JSON.stringify({
         ativa: true,
         dataVencimento,
-        orderNsu: payload.order_nsu
+        orderNsu: basePayload.order_nsu
       }));
       return true;
-    } catch (err) {
-      console.error('❌ Erro ao salvar no Supabase:', err);
-      // Fallback: guarda no localStorage para desbloquear mesmo se RLS falhar
-      localStorage.setItem(`assinatura_${userData.email}`, JSON.stringify({
+    } catch (err: any) {
+      const code = err?.code;
+      const msg = err?.message || String(err);
+      console.error('❌ Erro Supabase:', code, msg);
+
+      // Ao voltar da aba do MP a sessão pode ainda não estar no request; tenta de novo após 1,5s
+      if (code === '42501' || msg?.toLowerCase().includes('row-level security') || msg?.toLowerCase().includes('policy')) {
+        console.log('🔄 Possível RLS/sessão atrasada; tentando novamente em 1,5s...');
+        await new Promise((r) => setTimeout(r, 1500));
+        try {
+          const result = await tryInsert();
+          console.log('✅ SALVO NO SUPABASE (na segunda tentativa)');
+          localStorage.setItem(`assinatura_${result.userEmail}`, JSON.stringify({
+            ativa: true,
+            dataVencimento,
+            orderNsu: basePayload.order_nsu
+          }));
+          return true;
+        } catch (err2: any) {
+          console.error('❌ Erro na segunda tentativa:', err2?.code, err2?.message);
+        }
+      }
+
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const userEmail = authUser?.email ?? userData?.email ?? '';
+      localStorage.setItem(`assinatura_${userEmail}`, JSON.stringify({
         ativa: true,
         dataVencimento,
-        orderNsu: payload.order_nsu
+        orderNsu: basePayload.order_nsu
       }));
-      console.log('✅ SALVO NO LOCALSTORAGE (fallback)');
+      setSaveWarning(`Acesso liberado aqui. Tabela não atualizou: ${msg}. Confira se a política INSERT exige auth.uid() = user_id.`);
       return true;
     }
   };
@@ -389,6 +421,11 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
 
       {/* Content */}
       <main className="flex-1 overflow-y-auto p-4 pb-24">
+        {saveWarning && (
+          <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
+            <p className="text-amber-800 dark:text-amber-200 text-sm">{saveWarning}</p>
+          </div>
+        )}
         {error && (
           <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
             <p className="text-red-600 dark:text-red-400 text-sm mb-2">{error}</p>
