@@ -19,10 +19,19 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
   // Detecta quando usuário volta do Mercado Pago
   useEffect(() => {
     const checkMercadoPagoParams = async () => {
-      console.log('🔍 INICIANDO VERIFICAÇÃO MERCADO PAGO - userData:', userData);
+      console.log('🔍 INICIANDO VERIFICAÇÃO MERCADO PAGO');
+      console.log('🔍 URL completa:', window.location.href);
+      console.log('🔍 userData:', userData);
       
       if (!userData?.email) {
-        console.log('❌ Sem userData.email, saindo...');
+        console.log('❌ Sem userData.email, aguardando 2 segundos...');
+        setTimeout(() => {
+          if (!userData?.email) {
+            console.log('❌ Ainda sem userData.email após espera');
+            return;
+          }
+          checkMercadoPagoParams();
+        }, 2000);
         return;
       }
 
@@ -32,18 +41,18 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
       const paymentId = urlParams.get('payment_id');
       const externalReference = urlParams.get('external_reference');
       
-      console.log('🔍 URL completa:', window.location.href);
       console.log('🔍 Status:', status);
       console.log('🔍 Payment ID:', paymentId);
       console.log('🔍 External Reference:', externalReference);
       console.log('🔍 userData.email:', userData?.email);
+      console.log('🔍 userData.id:', userData?.id);
       
       // Se tiver status, veio do Mercado Pago
       if (status && paymentId && externalReference) {
         console.log('🎉 Detectado retorno do Mercado Pago!');
         
         try {
-          if (status === 'approved') {
+          if (status === 'approved' || status === 'success') {
             console.log('✅ Pagamento APROVADO pelo Mercado Pago!');
             
             // Verifica status detalhado do pagamento

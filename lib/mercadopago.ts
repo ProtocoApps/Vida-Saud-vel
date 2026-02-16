@@ -28,7 +28,7 @@ export async function criarPreferenciaMercadoPago(
   baseUrl?: string
 ): Promise<MercadoPagoPreferenceResponse> {
   const externalReference = `assinatura_${Date.now()}_${userEmail.replace(/[^a-zA-Z0-9]/g, '')}`;
-  const origin = baseUrl || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3002');
+  const origin = baseUrl || (typeof window !== 'undefined' ? window.location.origin : 'https://vida-saud-vel-dusky.vercel.app');
   
   const preference = {
     items: [{
@@ -38,9 +38,9 @@ export async function criarPreferenciaMercadoPago(
       currency_id: 'BRL'
     }],
     back_urls: {
-      success: `${origin}/#/assinatura?status=success&external_reference=${externalReference}`,
-      failure: `${origin}/#/assinatura?status=failure&external_reference=${externalReference}`,
-      pending: `${origin}/#/assinatura?status=pending&external_reference=${externalReference}`
+      success: `${origin}/#/assinatura?status=approved&payment_id={payment_id}&external_reference=${externalReference}`,
+      failure: `${origin}/#/assinatura?status=failure&payment_id={payment_id}&external_reference=${externalReference}`,
+      pending: `${origin}/#/assinatura?status=pending&payment_id={payment_id}&external_reference=${externalReference}`
     },
     auto_return: 'approved',
     notification_url: `${origin}/api/mercadopago-webhook`,
