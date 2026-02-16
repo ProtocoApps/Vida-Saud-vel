@@ -1,10 +1,10 @@
-
-import React, { useState, useEffect } from 'react';
 import { AppScreen, NavigateFunction } from '../types';
 import BottomNav from '../components/BottomNav';
 import { supabase } from '../lib/supabase';
-import { verificarAssinatura } from '../lib/assinatura';
 import { useGlobalUser } from '../contexts/GlobalUserContext';
+import React, { useState, useEffect } from 'react';
+import { verificarAssinatura } from '../lib/assinatura';
+import PremiumModal from '../components/PremiumModal';
 
 interface TreinosProps {
   onNavigate: NavigateFunction;
@@ -28,23 +28,34 @@ const Treinos: React.FC<TreinosProps> = ({ onNavigate }) => {
   const [loading, setLoading] = useState(true);
   const [treinoDoDia, setTreinoDoDia] = useState<VideoTreino | null>(null);
   const [loadingTreinoDoDia, setLoadingTreinoDoDia] = useState(true);
-  const [isAssinante, setIsAssinante] = useState<boolean | null>(null);
+  
+  const [isAssinante, setIsAssinante] = useState<boolean>(false);
+  const [loadingAssinatura, setLoadingAssinatura] = useState(true);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
 
   useEffect(() => {
     const checkAssinatura = async () => {
-      console.log('Treinos: Verificando assinatura para userData =', userData);
       if (userData?.email) {
-        const assinatura = await verificarAssinatura(userData.email);
-        console.log('Treinos: Assinatura encontrada =', assinatura);
-        setIsAssinante(!!assinatura);
+        try {
+          const assinatura = await verificarAssinatura(userData.email);
+          setIsAssinante(!!assinatura);
+        } catch (error) {
+          console.error('Erro ao verificar assinatura:', error);
+          setIsAssinante(false);
+        }
       } else {
-        console.log('Treinos: Sem userEmail, setando isAssinante = false');
         setIsAssinante(false);
       }
+      setLoadingAssinatura(false);
     };
-    
-    checkAssinatura();
-  }, [userData?.email]);
+
+    if (userData) {
+      checkAssinatura();
+    } else {
+      setIsAssinante(false);
+      setLoadingAssinatura(false);
+    }
+  }, [userData]);
 
   useEffect(() => {
     const loadVideos = async () => {
@@ -160,17 +171,23 @@ const Treinos: React.FC<TreinosProps> = ({ onNavigate }) => {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           ) : treinoDoDia ? (
-            // Mostra o treino do dia no formato normal de card
-            <div className="bg-white dark:bg-white/5 rounded-3xl overflow-hidden ios-shadow border border-gray-50 dark:border-white/5 group active:scale-[0.98] transition-all cursor-pointer"
-                 onClick={() => onNavigate({
-                   screen: AppScreen.VIDEO_PLAYER,
-                   params: {
-                     videoUrl: treinoDoDia.video_url,
-                     title: treinoDoDia.titulo,
-                     category: treinoDoDia.categoria,
-                     duration: treinoDoDia.duracao
+            // Mostra o treino do dia com verificação de assinatura
+            <div className={`bg-white dark:bg-white/5 rounded-3xl overflow-hidden ios-shadow border border-gray-50 dark:border-white/5 group active:scale-[0.98] transition-all ${isAssinante ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                 onClick={async () => {
+                   if (!isAssinante) {
+                     setShowPremiumModal(true);
+                     return;
                    }
-                 })}>
+                   onNavigate({
+                     screen: AppScreen.VIDEO_PLAYER,
+                     params: {
+                       videoUrl: treinoDoDia.video_url,
+                       title: treinoDoDia.titulo,
+                       category: treinoDoDia.categoria,
+                       duration: treinoDoDia.duracao
+                     }
+                   });
+                 }}>
               <div className="relative aspect-video">
                 <video 
                   src={treinoDoDia.video_url} 
@@ -208,20 +225,17 @@ const Treinos: React.FC<TreinosProps> = ({ onNavigate }) => {
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Categoria</p>
                     <p className="text-sm font-semibold dark:text-gray-300">{treinoDoDia.categoria}</p>
                   </div>
-                  <button 
-                    onClick={() => onNavigate({
-                      screen: AppScreen.VIDEO_PLAYER,
-                      params: {
-                        videoUrl: treinoDoDia.video_url,
-                        title: treinoDoDia.titulo,
-                        category: treinoDoDia.categoria,
-                        duration: treinoDoDia.duracao
-                      }
-                    })}
-                    className="h-11 px-8 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 active:scale-95 transition-all"
-                  >
-                    Iniciar
-                  </button>
+                  {!isAssinante && (
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowPremiumModal(true);
+                      }}
+                      className="px-4 py-2 bg-primary text-white rounded-xl font-semibold text-sm"
+                    >
+                      Assinar Agora
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -234,14 +248,11 @@ const Treinos: React.FC<TreinosProps> = ({ onNavigate }) => {
           ) : (
             // Mostra lista completa apenas se não houver treino programado
             filteredVideos.map((video, index) => {
-              const isFirstVideo = index === 0;
-const canAccess = isAssinante || isFirstVideo; // Assinantes acessam tudo, outros só primeiro vídeo
-              
               return (
-                <div key={video.id} className={`bg-white dark:bg-white/5 rounded-3xl overflow-hidden ios-shadow border border-gray-50 dark:border-white/5 group active:scale-[0.98] transition-all ${canAccess ? 'cursor-pointer' : 'cursor-not-allowed opacity-75'}`}
-                     onClick={() => {
-                       if (!canAccess) {
-                         onNavigate(AppScreen.ASSINATURA);
+                <div key={video.id} className={`bg-white dark:bg-white/5 rounded-3xl overflow-hidden ios-shadow border border-gray-50 dark:border-white/5 group active:scale-[0.98] transition-all ${isAssinante ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                     onClick={async () => {
+                       if (!isAssinante) {
+                         setShowPremiumModal(true);
                          return;
                        }
                        onNavigate({
@@ -253,26 +264,7 @@ const canAccess = isAssinante || isFirstVideo; // Assinantes acessam tudo, outro
                            duration: video.duracao
                          }
                        });
-                     }}
-                   >
-                  {!canAccess && (
-                    <div className="absolute inset-0 bg-black/60 z-10 flex items-center justify-center rounded-t-3xl">
-                      <div className="text-center">
-                        <span className="material-symbols-outlined text-5xl text-white mb-3">lock</span>
-                        <p className="text-white font-semibold mb-2">Conteúdo Premium</p>
-                        <p className="text-white/80 text-sm mb-4">Assine para desbloquear todos os vídeos</p>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onNavigate(AppScreen.ASSINATURA);
-                          }}
-                          className="px-6 py-2 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark transition-colors"
-                        >
-                          Assinar Agora
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                     }}>
 <div className="relative aspect-video">
                   <video 
                     src={video.video_url} 
@@ -310,30 +302,36 @@ const canAccess = isAssinante || isFirstVideo; // Assinantes acessam tudo, outro
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Categoria</p>
                       <p className="text-sm font-semibold dark:text-gray-300">{video.categoria}</p>
                     </div>
-                    <button 
-                      onClick={() => onNavigate({
-                        screen: AppScreen.VIDEO_PLAYER,
-                        params: {
-                          videoUrl: video.video_url,
-                          title: video.titulo,
-                          category: video.categoria,
-                          duration: video.duracao
-                        }
-                      })}
-                      className="h-11 px-8 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 active:scale-95 transition-all"
-                    >
-                      Iniciar
-                    </button>
+                    {!isAssinante && (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowPremiumModal(true);
+                        }}
+                        className="px-4 py-2 bg-primary text-white rounded-xl font-semibold text-sm"
+                      >
+                        Assinar Agora
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
             );
             })
-          )}
+          )} 
         </div>
       </main>
 
       <BottomNav currentScreen={AppScreen.TREINOS} onNavigate={onNavigate} />
+      
+      <PremiumModal 
+        isOpen={showPremiumModal}
+        onClose={() => setShowPremiumModal(false)}
+        onAssinar={() => {
+          setShowPremiumModal(false);
+          onNavigate(AppScreen.ASSINATURA);
+        }}
+      />
     </div>
   );
 };

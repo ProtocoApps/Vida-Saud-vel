@@ -122,7 +122,7 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
     };
 
     checkMercadoPagoParams();
-  }, [userData?.email]);
+  }, [userData?.email, window.location.search]); // Adicionado window.location.search como dependência
 
   const handleAssinar = async () => {
     if (!userData?.email) {
@@ -171,7 +171,7 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
       </header>
 
       {/* Content */}
-      <main className="flex-1 overflow-y-auto p-4">
+      <main className="flex-1 overflow-y-auto p-4 pb-24">
         {error && (
           <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
             <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
@@ -193,7 +193,7 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
 
         {/* Pricing Card */}
         <section className="mb-8">
-          <div className="bg-gradient-to-br from-primary to-primary-dark p-6 rounded-3xl text-white shadow-xl">
+          <div className="bg-primary p-6 rounded-3xl text-white shadow-xl">
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm opacity-90">Plano Mensal</span>
               <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-semibold">
@@ -201,7 +201,7 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
               </span>
             </div>
             <div className="mb-6">
-              <span className="text-4xl font-bold">R$ 5,00</span>
+              <span className="text-4xl font-bold">R$ 49,00</span>
               <span className="text-lg opacity-90">/mês</span>
             </div>
             <ul className="space-y-3 mb-6">
@@ -234,37 +234,14 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
           <button
             onClick={() => handleAssinar()}
             disabled={loading}
-            className="w-full p-6 bg-gradient-to-r from-primary to-primary-dark text-white font-bold text-lg rounded-2xl flex items-center justify-center gap-3 hover:from-primary-dark hover:to-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+            className="w-full p-6 bg-primary hover:bg-primary-dark text-white font-bold text-lg rounded-2xl flex items-center justify-center gap-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
           >
             <span className="material-symbols-outlined text-2xl">shopping_cart</span>
-            {loading ? 'Processando...' : 'Assinar Agora por R$ 5,00/mês'}
+            {loading ? 'Processando...' : 'Assinar Agora por R$ 49,00/mês'}
           </button>
 
-        {/* Informações importantes */}
-        <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="material-symbols-outlined text-blue-600 dark:text-blue-400">info</span>
-            <p className="text-sm font-semibold text-blue-800 dark:text-blue-200">Pagamento Mercado Pago</p>
-          </div>
-          <p className="text-xs text-blue-700 dark:text-blue-300">
-            Após o pagamento, seu acesso será liberado automaticamente. 
-            O Mercado Pago confirma o pagamento em tempo real via webhook.
-          </p>
-        </div>
         </section>
 
-        {/* Security Info */}
-        <section className="mt-8 p-4 bg-gray-50 dark:bg-white/5 rounded-2xl">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="material-symbols-outlined text-green-600 dark:text-green-400">lock</span>
-            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-              Pagamento 100% Seguro
-            </span>
-          </div>
-          <p className="text-xs text-gray-600 dark:text-gray-400">
-            Seus dados são protegidos pelo Mercado Pago, empresa líder em pagamentos digitais na América Latina.
-          </p>
-        </section>
 
         {/* Loading State */}
         {loading && (

@@ -21,7 +21,6 @@ import FomeEmocional from './pages/FomeEmocional';
 import VideoPlayer from './pages/VideoPlayer';
 import Historico from './pages/Historico';
 import Assinatura from './pages/Assinatura';
-import PagamentoSucesso from './pages/PagamentoSucesso';
 import AdminPanel from './pages/AdminPanel';
 
 const App: React.FC = () => {
@@ -157,8 +156,6 @@ const App: React.FC = () => {
         return <Historico onNavigate={navigate} />;
       case AppScreen.ASSINATURA:
         return <Assinatura onNavigate={navigate} />;
-      case AppScreen.PAGAMENTO_SUCESSO:
-        return <PagamentoSucesso onNavigate={navigate} />;
       case AppScreen.ADMIN_PANEL:
         return <AdminPanel onNavigate={navigate} />;
       default:

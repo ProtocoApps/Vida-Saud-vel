@@ -4,7 +4,6 @@ import { AppScreen } from '../types';
 import BottomNav from '../components/BottomNav';
 import { supabase } from '../lib/supabase';
 import { registrarDiaAtivo } from '../lib/diasAtivos';
-import { verificarAssinatura } from '../lib/assinatura';
 import { useGlobalUser } from '../contexts/GlobalUserContext';
 
 const DEFAULT_ACTIONS = [
@@ -28,7 +27,6 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
   const [scrolled, setScrolled] = useState(false);
   const [temNotificacoes, setTemNotificacoes] = useState(false);
   const [actions, setActions] = useState(DEFAULT_ACTIONS);
-  const [isAssinante, setIsAssinante] = useState<boolean | null>(null);
 
   const loadHomeCards = async () => {
     try {
@@ -72,18 +70,6 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
     }
   };
 
-  useEffect(() => {
-    const checkAssinatura = async () => {
-      if (userData?.email) {
-        const assinatura = await verificarAssinatura(userData.email);
-        setIsAssinante(!!assinatura);
-      } else {
-        setIsAssinante(false);
-      }
-    };
-    
-    checkAssinatura();
-  }, [userData?.email]);
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -184,31 +170,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
       </header>
 
       <main className="px-5 pt-4 space-y-6 overflow-y-auto flex-1">
-{/* Banner de assinatura - só mostra se não for assinante */}
-        {isAssinante === false && (
-          <div className="bg-gradient-to-r from-primary to-primary-dark p-5 rounded-3xl text-white shadow-xl">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-2xl">workspace_premium</span>
-                <span className="font-bold">Desbloqueie Tudo</span>
-              </div>
-              <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-semibold">
-                PREMIUM
-              </span>
-            </div>
-            <p className="text-sm mb-4 opacity-90">
-              Apenas o primeiro vídeo e áudio são gratuitos. Assine para acessar todo o conteúdo!
-            </p>
-            <button 
-              onClick={() => onNavigate(AppScreen.ASSINATURA)}
-              className="w-full bg-white text-primary font-bold py-3 rounded-xl hover:bg-gray-100 transition-colors"
-            >
-              Assinar Agora
-            </button>
-          </div>
-        )}
-
-        <div className="grid grid-cols-2 gap-4">
+<div className="grid grid-cols-2 gap-4">
           {actions.map((action, i) => (
             <button 
               key={i}

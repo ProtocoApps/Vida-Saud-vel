@@ -40,3 +40,4 @@ CREATE POLICY "Enable update for authenticated users" ON audios
 
 CREATE POLICY "Enable delete for authenticated users" ON audios
   FOR DELETE USING (auth.role() = 'authenticated');
+
