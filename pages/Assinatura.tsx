@@ -3,6 +3,7 @@ import { AppScreen } from '../types';
 import { useGlobalUser } from '../contexts/GlobalUserContext';
 import { criarPreferenciaMercadoPago, verificarPagamentoMercadoPago, MERCADO_PAGO_CONFIG } from '../lib/mercadopago';
 import { verificarAssinatura } from '../lib/assinatura';
+import { criarAssinaturaDB } from '../lib/assinaturas-db';
 import BottomNav from '../components/BottomNav';
 import PagamentoModal from '../components/PagamentoModal';
 
@@ -15,6 +16,7 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPagamentoModal, setShowPagamentoModal] = useState(false);
+  const [aguardandoPix, setAguardandoPix] = useState(false);
 
   // Função para buscar pagamentos recentes do usuário
   const buscarPagamentosRecentes = async (userEmail: string, paymentId?: string) => {
@@ -89,57 +91,40 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
       return false;
     }
   };
-  // Função simples e direta para salvar assinatura
+  // Salva assinatura no Supabase usando o cliente com sessão (RLS permite INSERT com auth.uid())
   const salvarAssinatura = async (paymentData: any) => {
-    console.log('💾 SALVANDO ASSINATURA - MODO SIMPLES');
-    
-    try {
-      // Tenta Supabase primeiro
-      const response = await fetch('https://bqiklofbfiatcdpenpyy.supabase.co/rest/v1/assinaturas', {
-        method: 'POST',
-        headers: {
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxaWtsb2ZiZmlhdGNkcGVucHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg5NDgxOTcsImV4cCI6MjA4NDUyNDE5N30._dNpdz9UjPijmx0QumORBYRxvUHcErFtdQ4KiFkpm6s',
-          'Content-Type': 'application/json',
-          'Prefer': 'return=representation'
-        },
-        body: JSON.stringify({
-          user_email: userData.email,
-          user_id: userData?.id || null,
-          status: 'ativa',
-          data_inicio: new Date().toISOString(),
-          data_vencimento: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          valor: paymentData.transaction_amount || 1.00,
-          forma_pagamento: paymentData.payment_type_id === 'credit_card' ? 'cartao' : 'pix',
-          order_nsu: paymentData.payment_id || paymentData.id,
-          slug: paymentData.external_reference || 'manual'
-        })
-      });
+    console.log('💾 SALVANDO ASSINATURA NO SUPABASE (com sessão)');
+    const dataInicio = new Date().toISOString();
+    const dataVencimento = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    const payload = {
+      user_email: userData.email,
+      user_id: userData?.id ?? null,
+      status: 'ativa' as const,
+      data_inicio: dataInicio,
+      data_vencimento: dataVencimento,
+      valor: paymentData.transaction_amount ?? 1.00,
+      forma_pagamento: (paymentData.payment_type_id === 'credit_card' ? 'cartao' : 'pix') as 'pix' | 'cartao',
+      order_nsu: String(paymentData.payment_id ?? paymentData.id ?? ''),
+      slug: paymentData.external_reference || 'manual'
+    };
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ SALVO NO SUPABASE (REST):', data);
-        return true;
-      } else {
-        const error = await response.text();
-        console.error('❌ Erro REST Supabase:', error);
-        
-        // Fallback localStorage
-        localStorage.setItem(`assinatura_${userData.email}`, JSON.stringify({
-          ativa: true,
-          dataVencimento: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          orderNsu: paymentData.payment_id || paymentData.id
-        }));
-        console.log('✅ SALVO NO LOCALSTORAGE');
-        return true;
-      }
-    } catch (error) {
-      console.error('❌ Erro geral:', error);
-      
-      // Fallback localStorage
+    try {
+      await criarAssinaturaDB(payload);
+      console.log('✅ SALVO NO SUPABASE');
+      // Atualiza cache local para desbloqueio imediato
       localStorage.setItem(`assinatura_${userData.email}`, JSON.stringify({
         ativa: true,
-        dataVencimento: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        orderNsu: paymentData.payment_id || paymentData.id
+        dataVencimento,
+        orderNsu: payload.order_nsu
+      }));
+      return true;
+    } catch (err) {
+      console.error('❌ Erro ao salvar no Supabase:', err);
+      // Fallback: guarda no localStorage para desbloquear mesmo se RLS falhar
+      localStorage.setItem(`assinatura_${userData.email}`, JSON.stringify({
+        ativa: true,
+        dataVencimento,
+        orderNsu: payload.order_nsu
       }));
       console.log('✅ SALVO NO LOCALSTORAGE (fallback)');
       return true;
@@ -165,8 +150,9 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
         return;
       }
 
-      // Verifica parâmetros do Mercado Pago
-      const urlParams = new URLSearchParams(window.location.search);
+      // Verifica parâmetros do Mercado Pago (query pode vir em search ou no hash)
+      const queryString = window.location.search || (window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '');
+      const urlParams = new URLSearchParams(queryString);
       const status = urlParams.get('status');
       const collectionStatus = urlParams.get('collection_status');
       const paymentId = urlParams.get('payment_id');
@@ -354,23 +340,19 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
 
     try {
       console.log('🚀 Criando preferência no Mercado Pago...');
-      
-      // Cria preferência de pagamento no Mercado Pago
       const preference = await criarPreferenciaMercadoPago(
-        userData.email, 
-        userData.name, 
+        userData.email,
+        userData.name,
         window.location.origin
       );
-      
       console.log('✅ Preferência criada:', preference);
-      
-      // Abre a página de pagamento do Mercado Pago
-      // Em produção usa init_point, em desenvolvimento usa sandbox_init_point
+
       const paymentUrl = preference.init_point || preference.sandbox_init_point;
-      
       console.log('🔗 Abrindo link de pagamento:', paymentUrl);
       window.open(paymentUrl, '_blank');
-      
+
+      // PIX: usuário pode ficar na tela do QR; polling na nossa aba detecta o pagamento
+      setAguardandoPix(true);
     } catch (err: any) {
       console.error('❌ Erro ao criar pagamento:', err);
       setError(err.message || 'Erro ao processar pagamento. Tente novamente.');
@@ -378,6 +360,22 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
       setLoading(false);
     }
   };
+
+  // Polling enquanto aguarda pagamento PIX (tela do MP não redireciona sozinha)
+  useEffect(() => {
+    if (!aguardandoPix || !userData?.email) return;
+
+    const interval = setInterval(async () => {
+      const encontrou = await buscarPagamentosRecentes(userData.email);
+      if (encontrou) {
+        setAguardandoPix(false);
+        setShowPagamentoModal(true);
+        setError(null);
+      }
+    }, 8000);
+
+    return () => clearInterval(interval);
+  }, [aguardandoPix, userData?.email]);
 
   
   return (
@@ -417,11 +415,30 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
             Desbloqueie todos os vídeos de treinos e conteúdos exclusivos com acesso ilimitado.
           </p>
           
+          {/* Card "Aguardando PIX" quando a janela do MP está aberta */}
+          {aguardandoPix && (
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-6 max-w-md mx-auto">
+              <p className="text-amber-800 dark:text-amber-200 text-sm font-medium mb-2">
+                ⏳ Aguardando pagamento PIX
+              </p>
+              <p className="text-amber-700 dark:text-amber-300 text-sm mb-3">
+                Não feche esta aba. Assim que você pagar (mesmo que a tela do Mercado Pago continue no QR), vamos detectar e liberar seu acesso em até 1 minuto.
+              </p>
+              <button
+                type="button"
+                onClick={() => setAguardandoPix(false)}
+                className="text-amber-600 dark:text-amber-400 text-sm underline hover:no-underline"
+              >
+                Já paguei / Cancelar espera
+              </button>
+            </div>
+          )}
+
           {/* Mensagem para usuários que pagaram Pix */}
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-6 max-w-md mx-auto">
             <p className="text-blue-600 dark:text-blue-400 text-sm">
               <span className="font-semibold">ℹ️ Pagou com Pix?</span><br/>
-              Após o pagamento, volte para esta página. O sistema detecta automaticamente seu pagamento em até 2 minutos.
+              Após o pagamento, volte para esta página. O sistema detecta automaticamente seu pagamento em até 1 minuto.
             </p>
           </div>
         </section>

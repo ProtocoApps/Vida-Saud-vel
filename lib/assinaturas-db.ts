@@ -2,7 +2,7 @@ import { supabase } from './supabase';
 
 export interface AssinaturaDB {
   id: string;
-  user_id: string;
+  user_id: string | null;
   user_email: string;
   status: 'ativa' | 'cancelada' | 'expirada';
   data_inicio: string;
