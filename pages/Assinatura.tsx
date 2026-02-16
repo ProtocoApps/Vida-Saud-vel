@@ -158,7 +158,10 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
         dataVencimento,
         orderNsu: basePayload.order_nsu
       }));
-      setSaveWarning(`Acesso liberado aqui. Tabela não atualizou: ${msg}. Confira se a política INSERT exige auth.uid() = user_id.`);
+      const dica = msg?.toLowerCase().includes('table users') || msg?.toLowerCase().includes('permission denied')
+        ? ' No Supabase SQL Editor, execute o script database/nova-tabela-assinaturas.sql (tabela assinaturas_registro).'
+        : ' Confira as políticas da tabela assinaturas_registro.';
+      setSaveWarning(`Acesso liberado aqui. Tabela não atualizou: ${msg}.${dica}`);
       return true;
     }
   };

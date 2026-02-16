@@ -16,10 +16,12 @@ export interface AssinaturaDB {
   updated_at: string;
 }
 
-// Criar nova assinatura no banco (usa sessão do cliente para RLS: auth.uid() = user_id)
+const TABELA_ASSINATURAS = 'assinaturas_registro';
+
+// Criar nova assinatura (tabela assinaturas_registro com políticas simples, sem referência a public.users)
 export async function criarAssinaturaDB(assinatura: Omit<AssinaturaDB, 'id' | 'created_at' | 'updated_at'>) {
   const { data, error } = await supabase
-    .from('assinaturas')
+    .from(TABELA_ASSINATURAS)
     .insert([assinatura])
     .select()
     .single();
@@ -35,7 +37,7 @@ export async function criarAssinaturaDB(assinatura: Omit<AssinaturaDB, 'id' | 'c
 export async function buscarAssinaturaAtiva(userId: string): Promise<AssinaturaDB | null> {
   try {
     const { data, error } = await supabase
-      .from('assinaturas')
+      .from(TABELA_ASSINATURAS)
       .select('*')
       .eq('user_id', userId)
       .eq('status', 'ativa')
@@ -59,7 +61,7 @@ export async function buscarAssinaturaAtiva(userId: string): Promise<AssinaturaD
 export async function buscarAssinaturaPorEmail(email: string): Promise<AssinaturaDB | null> {
   try {
     const { data, error } = await supabase
-      .from('assinaturas')
+      .from(TABELA_ASSINATURAS)
       .select('*')
       .eq('user_email', email)
       .eq('status', 'ativa')
@@ -83,7 +85,7 @@ export async function buscarAssinaturaPorEmail(email: string): Promise<Assinatur
 export async function listarAssinaturas(): Promise<AssinaturaDB[]> {
   try {
     const { data, error } = await supabase
-      .from('assinaturas')
+      .from(TABELA_ASSINATURAS)
       .select('*')
       .order('created_at', { ascending: false });
 
@@ -99,7 +101,7 @@ export async function listarAssinaturas(): Promise<AssinaturaDB[]> {
 export async function cancelarAssinatura(assinaturaId: string) {
   try {
     const { data, error } = await supabase
-      .from('assinaturas')
+      .from(TABELA_ASSINATURAS)
       .update({ 
         status: 'cancelada',
         updated_at: new Date().toISOString()
@@ -120,7 +122,7 @@ export async function cancelarAssinatura(assinaturaId: string) {
 export async function estenderAssinatura(assinaturaId: string, dias: number) {
   try {
     const { data, error } = await supabase
-      .from('assinaturas')
+      .from(TABELA_ASSINATURAS)
       .update({ 
         data_vencimento: new Date(Date.now() + dias * 24 * 60 * 60 * 1000).toISOString(),
         updated_at: new Date().toISOString()
@@ -141,7 +143,7 @@ export async function estenderAssinatura(assinaturaId: string, dias: number) {
 export async function expirarAssinaturasVencidas() {
   try {
     const { data, error } = await supabase
-      .from('assinaturas')
+      .from(TABELA_ASSINATURAS)
       .update({ 
         status: 'expirada',
         updated_at: new Date().toISOString()
@@ -161,7 +163,7 @@ export async function expirarAssinaturasVencidas() {
 export async function buscarEstatisticasAssinaturas() {
   try {
     const { data, error } = await supabase
-      .from('assinaturas')
+      .from(TABELA_ASSINATURAS)
       .select('status, valor, created_at, data_vencimento');
 
     if (error) throw error;
