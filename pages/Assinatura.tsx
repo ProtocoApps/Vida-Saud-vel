@@ -321,6 +321,26 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
     checkMercadoPagoParams();
   }, [userData?.email, window.location.search]); // Adicionado window.location.search como dependência
 
+  // Verificação contínua para pagamentos Pix
+  useEffect(() => {
+    if (!userData?.email) return;
+
+    const interval = setInterval(async () => {
+      console.log('🔄 Verificação contínua de pagamentos...');
+      
+      const urlParams = new URLSearchParams(window.location.search);
+      const paymentId = urlParams.get('payment_id');
+      
+      const encontrou = await buscarPagamentosRecentes(userData.email, paymentId || undefined);
+      if (encontrou) {
+        console.log('🎉 Pagamento encontrado na verificação contínua!');
+        clearInterval(interval); // Para a verificação quando encontrar
+      }
+    }, 10000); // Verifica a cada 10 segundos
+
+    return () => clearInterval(interval); // Limpa ao desmontar
+  }, [userData?.email]);
+
   const handleAssinar = async () => {
     if (!userData?.email) {
       setError('Usuário não encontrado. Faça login novamente.');
@@ -391,15 +411,23 @@ const Assinatura: React.FC<AssinaturaProps> = ({ onNavigate }) => {
           <h2 className="text-3xl font-bold mb-4 dark:text-white font-serif">
             Acesso Premium Completo
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Desbloqueie todos os recursos e transforme sua jornada de bem-estar
+          <p className="text-gray-600 dark:text-gray-300 mb-6 max-w-md mx-auto leading-relaxed">
+            Desbloqueie todos os vídeos de treinos e conteúdos exclusivos com acesso ilimitado.
           </p>
+          
+          {/* Mensagem para usuários que pagaram Pix */}
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-6 max-w-md mx-auto">
+            <p className="text-blue-600 dark:text-blue-400 text-sm">
+              <span className="font-semibold">ℹ️ Pagou com Pix?</span><br/>
+              Após o pagamento, volte para esta página. O sistema detecta automaticamente seu pagamento em até 2 minutos.
+            </p>
+          </div>
         </section>
 
-        {/* Pricing Card */}
-        <section className="mb-8">
-          <div className="bg-primary p-6 rounded-3xl text-white shadow-xl">
-            <div className="flex items-center justify-between mb-4">
+        {/* Pricing Section */}
+        <section className="mb-8 max-w-md mx-auto">
+          <div className="bg-primary rounded-3xl p-8 text-white shadow-2xl">
+            <div className="flex justify-between items-center mb-6">
               <span className="text-sm opacity-90">Plano Mensal</span>
               <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-semibold">
                 MAIS POPULAR

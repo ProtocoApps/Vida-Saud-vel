@@ -38,13 +38,16 @@ export async function criarPreferenciaMercadoPago(
       currency_id: 'BRL'
     }],
     back_urls: {
-      success: `${origin}/#/assinatura`,
-      failure: `${origin}/#/assinatura`, 
-      pending: `${origin}/#/assinatura`
+      success: `${origin}/#/assinatura?success=true`,
+      failure: `${origin}/#/assinatura?failure=true`, 
+      pending: `${origin}/#/assinatura?pending=true`
     },
     auto_return: 'all',
     notification_url: `${origin}/api/mercadopago-webhook`,
-    external_reference: externalReference
+    external_reference: externalReference,
+    expires: false,
+    expiration_date_from: null,
+    expiration_date_to: null
   };
 
   try {
