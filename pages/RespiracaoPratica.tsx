@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AppScreen } from '../types';
 
-// Componente para animação do pulmão (JSON) - versão com import direto
+// Import direto dos arquivos JSON
+import breathingExerciseData from '../public/assets/animations/breathing-exercise.json';
+import rippleAlertData from '../public/assets/animations/Ripple Alert.json';
+import writingBlueBgData from '../public/assets/animations/Writing - Blue BG.json';
+import familyHugData from '../public/assets/animations/family hug.json';
+
+// Componente para animação do pulmão (JSON) - versão DEFINITIVA
 const PulmaoAnimation: React.FC<{ fase: 'inspirar' | 'segurar' | 'expirar', categoria: string }> = ({ fase, categoria }) => {
   const [animationData, setAnimationData] = useState<any>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
@@ -44,112 +50,59 @@ const PulmaoAnimation: React.FC<{ fase: 'inspirar' | 'segurar' | 'expirar', cate
   }, [categoria]);
 
   const loadAnimation = () => {
-    // Import direto dos arquivos JSON
-    let animationUrl = '';
+    // Usar dados importados diretamente - SEM FETCH!
+    let data = null;
     
     switch (categoria) {
       case 'Foco':
-        animationUrl = 'https://vida-saud-vel-dusky.vercel.app/assets/animations/Ripple%20Alert.json';
+        data = rippleAlertData;
         break;
       case 'Angústia':
-        animationUrl = 'https://vida-saud-vel-dusky.vercel.app/assets/animations/Writing%20-%20Blue%20BG.json';
+        data = writingBlueBgData;
         break;
       case 'Segurança':
-        animationUrl = 'https://vida-saud-vel-dusky.vercel.app/assets/animations/family%20hug.json';
+        data = familyHugData;
         break;
       default:
-        animationUrl = 'https://vida-saud-vel-dusky.vercel.app/assets/animations/breathing-exercise.json';
+        data = breathingExerciseData;
     }
     
-    console.log(`🎬 Carregando animação: ${animationUrl}`);
+    console.log('🎬 Usando dados importados diretamente:', categoria);
+    console.log('✅ Dados da animação:', data);
     
-    fetch(animationUrl)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log('✅ Dados da animação recebidos:', data);
-        setAnimationData(data);
+    if (data) {
+      setAnimationData(data);
+      
+      // Inicializar animação quando o container estiver pronto
+      if (containerRef.current && (window as any).lottie) {
+        console.log('🎯 Criando animação...');
         
-        // Inicializar animação quando o container estiver pronto
-        if (containerRef.current && (window as any).lottie) {
-          console.log('🎯 Criando animação...');
-          
-          // Destruir animação anterior se existir
-          if (animationRef.current) {
-            animationRef.current.destroy();
-          }
-          
-          const animation = (window as any).lottie.loadAnimation({
-            container: containerRef.current,
-            renderer: 'svg',
-            loop: true,
-            autoplay: true,
-            animationData: data
-          });
-          
-          animationRef.current = animation;
-          
-          // Sincronizar velocidade com a fase
-          const speed = fase === 'inspirar' ? 1.5 : fase === 'segurar' ? 0.5 : 1;
-          animation.setSpeed(speed);
-          console.log('🚀 Animação criada com sucesso!');
-        } else {
-          console.log('❌ Container ou Lottie não pronto:', {
-            container: !!containerRef.current,
-            lottie: !!(window as any).lottie
-          });
+        // Destruir animação anterior se existir
+        if (animationRef.current) {
+          animationRef.current.destroy();
         }
-      })
-      .catch(error => {
-        console.error('❌ Erro ao carregar animação:', error);
-        // Tentar fallback com caminho relativo
-        console.log('🔄 Tentando fallback com caminho relativo...');
-        tryFallback();
-      });
-  };
-
-  const tryFallback = () => {
-    let fallbackFile = '';
-    
-    switch (categoria) {
-      case 'Foco':
-        fallbackFile = '/assets/animations/Ripple Alert.json';
-        break;
-      case 'Angústia':
-        fallbackFile = '/assets/animations/Writing - Blue BG.json';
-        break;
-      case 'Segurança':
-        fallbackFile = '/assets/animations/family hug.json';
-        break;
-      default:
-        fallbackFile = '/assets/animations/breathing-exercise.json';
+        
+        const animation = (window as any).lottie.loadAnimation({
+          container: containerRef.current,
+          renderer: 'svg',
+          loop: true,
+          autoplay: true,
+          animationData: data
+        });
+        
+        animationRef.current = animation;
+        
+        // Sincronizar velocidade com a fase
+        const speed = fase === 'inspirar' ? 1.5 : fase === 'segurar' ? 0.5 : 1;
+        animation.setSpeed(speed);
+        console.log('🚀 Animação criada com sucesso!');
+      } else {
+        console.log('❌ Container ou Lottie não pronto:', {
+          container: !!containerRef.current,
+          lottie: !!(window as any).lottie
+        });
+      }
     }
-    
-    console.log(`🔄 Tentando fallback: ${fallbackFile}`);
-    
-    fetch(fallbackFile)
-      .then(response => response.json())
-      .then(data => {
-        console.log('✅ Fallback funcionou!');
-        setAnimationData(data);
-        if (containerRef.current && (window as any).lottie) {
-          const animation = (window as any).lottie.loadAnimation({
-            container: containerRef.current,
-            renderer: 'svg',
-            loop: true,
-            autoplay: true,
-            animationData: data
-          });
-          animationRef.current = animation;
-        }
-      })
-      .catch(error => {
-        console.error('❌ Fallback também falhou:', error);
-      });
   };
 
   // Atualizar velocidade quando a fase mudar
