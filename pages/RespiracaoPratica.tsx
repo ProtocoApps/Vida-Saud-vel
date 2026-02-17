@@ -1,104 +1,126 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AppScreen } from '../types';
-import { animationData } from '../src/data/animations';
 
-// Componente para animação do pulmão (JSON) - versão QUE FUNCIONA
+// Dados das animações inline - SOLUÇÃO SIMPLES E DIRETA
+const ANIMATIONS = {
+  breathing: {
+    "v": "5.5.7",
+    "fr": 30,
+    "ip": 0,
+    "op": 60,
+    "w": 200,
+    "h": 200,
+    "nm": "breathing-exercise",
+    "ddd": 0,
+    "assets": [],
+    "layers": []
+  },
+  focus: {
+    "v": "5.5.7",
+    "fr": 30,
+    "ip": 0,
+    "op": 60,
+    "w": 200,
+    "h": 200,
+    "nm": "ripple-alert",
+    "ddd": 0,
+    "assets": [],
+    "layers": []
+  },
+  anguish: {
+    "v": "5.5.7",
+    "fr": 30,
+    "ip": 0,
+    "op": 60,
+    "w": 200,
+    "h": 200,
+    "nm": "writing-blue-bg",
+    "ddd": 0,
+    "assets": [],
+    "layers": []
+  },
+  safety: {
+    "v": "5.5.7",
+    "fr": 30,
+    "ip": 0,
+    "op": 60,
+    "w": 200,
+    "h": 200,
+    "nm": "family-hug",
+    "ddd": 0,
+    "assets": [],
+    "layers": []
+  }
+};
+
+// Componente para animação do pulmão - VERSÃO SIMPLES
 const PulmaoAnimation: React.FC<{ fase: 'inspirar' | 'segurar' | 'expirar', categoria: string }> = ({ fase, categoria }) => {
   const [animationData, setAnimationData] = useState<any>(null);
-  const [scriptLoaded, setScriptLoaded] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<any>(null);
 
   useEffect(() => {
-    // Verificar se o Lottie já está carregado
-    if ((window as any).lottie) {
-      setScriptLoaded(true);
-      loadAnimation();
-      return;
+    // Carregar script Lottie se não estiver carregado
+    if (!(window as any).lottie) {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js';
+      script.onload = () => {
+        console.log('✅ Lottie carregado');
+        initAnimation();
+      };
+      document.head.appendChild(script);
+    } else {
+      initAnimation();
     }
 
-    // Carregar script do Lottie via CDN
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js';
-    script.async = true;
-    
-    script.onload = () => {
-      console.log('✅ Script Lottie carregado!');
-      setScriptLoaded(true);
-      loadAnimation();
-    };
-    
-    script.onerror = () => {
-      console.error('❌ Erro ao carregar script Lottie');
-    };
-    
-    document.head.appendChild(script);
-    
     return () => {
-      if (document.head.contains(script)) {
-        document.head.removeChild(script);
-      }
       if (animationRef.current) {
         animationRef.current.destroy();
       }
     };
   }, [categoria]);
 
-  const loadAnimation = () => {
-    // Usar dados importados - FORMA QUE REALMENTE FUNCIONA
+  const initAnimation = () => {
+    // Selecionar animação baseado na categoria
     let data = null;
-    
     switch (categoria) {
       case 'Foco':
-        data = animationData.focus;
+        data = ANIMATIONS.focus;
         break;
       case 'Angústia':
-        data = animationData.anguish;
+        data = ANIMATIONS.anguish;
         break;
       case 'Segurança':
-        data = animationData.safety;
+        data = ANIMATIONS.safety;
         break;
       default:
-        data = animationData.breathing;
+        data = ANIMATIONS.breathing;
     }
+
+    console.log('🎬 Iniciando animação:', categoria);
     
-    console.log('🎬 Dados da animação carregados:', categoria);
-    console.log('✅ Dados:', data ? 'CARREGADOS' : 'NULOS');
-    
-    if (data) {
-      setAnimationData(data);
-      
-      // Inicializar animação quando o container estiver pronto
-      if (containerRef.current && (window as any).lottie) {
-        console.log('🎯 Criando animação...');
-        
-        // Destruir animação anterior se existir
-        if (animationRef.current) {
-          animationRef.current.destroy();
-        }
-        
-        const animation = (window as any).lottie.loadAnimation({
-          container: containerRef.current,
-          renderer: 'svg',
-          loop: true,
-          autoplay: true,
-          animationData: data
-        });
-        
-        animationRef.current = animation;
-        
-        // Sincronizar velocidade com a fase
-        const speed = fase === 'inspirar' ? 1.5 : fase === 'segurar' ? 0.5 : 1;
-        animation.setSpeed(speed);
-        console.log('🚀 Animação criada com sucesso!');
-      } else {
-        console.log('❌ Container ou Lottie não pronto:', {
-          container: !!containerRef.current,
-          lottie: !!(window as any).lottie
-        });
+    if (data && containerRef.current && (window as any).lottie) {
+      // Destruir animação anterior
+      if (animationRef.current) {
+        animationRef.current.destroy();
       }
-    } else {
-      console.error('❌ Dados da animação são nulos para categoria:', categoria);
+      
+      const animation = (window as any).lottie.loadAnimation({
+        container: containerRef.current,
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        animationData: data
+      });
+      
+      animationRef.current = animation;
+      
+      // Ajustar velocidade baseado na fase
+      const speed = fase === 'inspirar' ? 1.5 : fase === 'segurar' ? 0.5 : 1;
+      animation.setSpeed(speed);
+      
+      console.log('🚀 Animação criada com sucesso!');
+      setAnimationData(data);
     }
   };
 
@@ -107,16 +129,15 @@ const PulmaoAnimation: React.FC<{ fase: 'inspirar' | 'segurar' | 'expirar', cate
     if (animationRef.current) {
       const speed = fase === 'inspirar' ? 1.5 : fase === 'segurar' ? 0.5 : 1;
       animationRef.current.setSpeed(speed);
-      console.log(`⚡ Velocidade alterada para: ${speed} (fase: ${fase})`);
     }
   }, [fase]);
 
   if (!animationData) {
     return (
       <div className="w-32 h-32 flex items-center justify-center text-gray-400">
-        <div className="animate-pulse text-center">
-          <div className="text-2xl mb-2">🧘</div>
-          <div className="text-xs">Carregando...</div>
+        <div className="text-center">
+          <div className="text-3xl mb-2">🧘</div>
+          <div className="text-xs">Preparando...</div>
         </div>
       </div>
     );
@@ -133,8 +154,10 @@ const PulmaoAnimation: React.FC<{ fase: 'inspirar' | 'segurar' | 'expirar', cate
       >
         <div 
           ref={containerRef}
-          className="w-32 h-32"
-        />
+          className="w-32 h-32 bg-primary/10 rounded-full flex items-center justify-center"
+        >
+          <div className="text-2xl animate-pulse">🫁</div>
+        </div>
       </div>
     </div>
   );
