@@ -1,162 +1,83 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AppScreen } from '../types';
 
-// Dados das animações inline - SOLUÇÃO SIMPLES E DIRETA
-const ANIMATIONS = {
-  breathing: {
-    "v": "5.5.7",
-    "fr": 30,
-    "ip": 0,
-    "op": 60,
-    "w": 200,
-    "h": 200,
-    "nm": "breathing-exercise",
-    "ddd": 0,
-    "assets": [],
-    "layers": []
-  },
-  focus: {
-    "v": "5.5.7",
-    "fr": 30,
-    "ip": 0,
-    "op": 60,
-    "w": 200,
-    "h": 200,
-    "nm": "ripple-alert",
-    "ddd": 0,
-    "assets": [],
-    "layers": []
-  },
-  anguish: {
-    "v": "5.5.7",
-    "fr": 30,
-    "ip": 0,
-    "op": 60,
-    "w": 200,
-    "h": 200,
-    "nm": "writing-blue-bg",
-    "ddd": 0,
-    "assets": [],
-    "layers": []
-  },
-  safety: {
-    "v": "5.5.7",
-    "fr": 30,
-    "ip": 0,
-    "op": 60,
-    "w": 200,
-    "h": 200,
-    "nm": "family-hug",
-    "ddd": 0,
-    "assets": [],
-    "layers": []
-  }
-};
-
-// Componente para animação do pulmão - VERSÃO SIMPLES
+// Componente para animação do pulmão - CSS PURO (sem JSON)
 const PulmaoAnimation: React.FC<{ fase: 'inspirar' | 'segurar' | 'expirar', categoria: string }> = ({ fase, categoria }) => {
-  const [animationData, setAnimationData] = useState<any>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const animationRef = useRef<any>(null);
+  const [isAnimating, setIsAnimating] = useState(true);
 
   useEffect(() => {
-    // Carregar script Lottie se não estiver carregado
-    if (!(window as any).lottie) {
-      const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js';
-      script.onload = () => {
-        console.log('✅ Lottie carregado');
-        initAnimation();
-      };
-      document.head.appendChild(script);
-    } else {
-      initAnimation();
-    }
+    // Reiniciar animação quando a fase mudar
+    setIsAnimating(false);
+    setTimeout(() => setIsAnimating(true), 50);
+  }, [fase]);
 
-    return () => {
-      if (animationRef.current) {
-        animationRef.current.destroy();
-      }
+  const getAnimationStyle = () => {
+    const baseStyle = {
+      transition: 'all 2s ease-in-out',
+      transform: 'scale(1)'
     };
-  }, [categoria]);
 
-  const initAnimation = () => {
-    // Selecionar animação baseado na categoria
-    let data = null;
-    switch (categoria) {
-      case 'Foco':
-        data = ANIMATIONS.focus;
-        break;
-      case 'Angústia':
-        data = ANIMATIONS.anguish;
-        break;
-      case 'Segurança':
-        data = ANIMATIONS.safety;
-        break;
+    switch (fase) {
+      case 'inspirar':
+        return { ...baseStyle, transform: 'scale(1.3)', opacity: '1' };
+      case 'segurar':
+        return { ...baseStyle, transform: 'scale(1.1)', opacity: '0.9' };
+      case 'expirar':
+        return { ...baseStyle, transform: 'scale(0.7)', opacity: '0.7' };
       default:
-        data = ANIMATIONS.breathing;
-    }
-
-    console.log('🎬 Iniciando animação:', categoria);
-    
-    if (data && containerRef.current && (window as any).lottie) {
-      // Destruir animação anterior
-      if (animationRef.current) {
-        animationRef.current.destroy();
-      }
-      
-      const animation = (window as any).lottie.loadAnimation({
-        container: containerRef.current,
-        renderer: 'svg',
-        loop: true,
-        autoplay: true,
-        animationData: data
-      });
-      
-      animationRef.current = animation;
-      
-      // Ajustar velocidade baseado na fase
-      const speed = fase === 'inspirar' ? 1.5 : fase === 'segurar' ? 0.5 : 1;
-      animation.setSpeed(speed);
-      
-      console.log('🚀 Animação criada com sucesso!');
-      setAnimationData(data);
+        return baseStyle;
     }
   };
 
-  // Atualizar velocidade quando a fase mudar
-  useEffect(() => {
-    if (animationRef.current) {
-      const speed = fase === 'inspirar' ? 1.5 : fase === 'segurar' ? 0.5 : 1;
-      animationRef.current.setSpeed(speed);
+  const getAnimationIcon = () => {
+    switch (categoria) {
+      case 'Foco':
+        return '💎';
+      case 'Angústia':
+        return '✍️';
+      case 'Segurança':
+        return '🤗';
+      default:
+        return '🫁';
     }
-  }, [fase]);
+  };
 
-  if (!animationData) {
-    return (
-      <div className="w-32 h-32 flex items-center justify-center text-gray-400">
-        <div className="text-center">
-          <div className="text-3xl mb-2">🧘</div>
-          <div className="text-xs">Preparando...</div>
-        </div>
-      </div>
-    );
-  }
+  const getAnimationColor = () => {
+    switch (categoria) {
+      case 'Foco':
+        return 'bg-blue-500/20';
+      case 'Angústia':
+        return 'bg-purple-500/20';
+      case 'Segurança':
+        return 'bg-green-500/20';
+      default:
+        return 'bg-primary/10';
+    }
+  };
 
   return (
     <div className="w-full h-full flex items-center justify-center">
-      <div 
-        className={`transition-all duration-1000 ${
-          fase === 'inspirar' ? 'scale-125' : 
-          fase === 'segurar' ? 'scale-110' : 
-          'scale-75'
-        }`}
-      >
+      <div className="relative">
+        {/* Círculos de respiração */}
         <div 
-          ref={containerRef}
-          className="w-32 h-32 bg-primary/10 rounded-full flex items-center justify-center"
+          className={`absolute inset-0 w-32 h-32 rounded-full ${getAnimationColor()} transition-all duration-2000`}
+          style={getAnimationStyle()}
+        />
+        
+        {/* Círculo interno */}
+        <div 
+          className={`absolute inset-4 w-24 h-24 rounded-full ${getAnimationColor()} transition-all duration-2000 delay-300`}
+          style={getAnimationStyle()}
+        />
+        
+        {/* Ícone central */}
+        <div 
+          className="absolute inset-0 w-32 h-32 rounded-full flex items-center justify-center"
+          style={getAnimationStyle()}
         >
-          <div className="text-2xl animate-pulse">🫁</div>
+          <div className={`text-4xl ${isAnimating ? 'animate-pulse' : ''}`}>
+            {getAnimationIcon()}
+          </div>
         </div>
       </div>
     </div>
