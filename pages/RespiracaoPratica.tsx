@@ -33,6 +33,11 @@ const PulmaoAnimation: React.FC<{ fase: 'inspirar' | 'segurar' | 'expirar', cate
   }, [categoria]);
 
   const loadAnimation = async () => {
+    console.log('🔍 INICIANDO DEBUG COMPLETO');
+    console.log('🔍 Categoria:', categoria);
+    console.log('🔍 Container:', !!containerRef.current);
+    console.log('🔍 Lottie disponível:', !!(window as any).lottie);
+    
     // Usar apenas os arquivos pequenos
     let animationFile = '';
     
@@ -50,6 +55,8 @@ const PulmaoAnimation: React.FC<{ fase: 'inspirar' | 'segurar' | 'expirar', cate
         animationFile = '/assets/animations/breathing-exercise.json'; // 36KB - MÉDIO
     }
 
+    console.log('🔍 Arquivo selecionado:', animationFile);
+
     // Para arquivos grandes, usar versão simplificada
     if (categoria === 'Angústia' || categoria === 'Segurança') {
       console.log('🎬 Usando animação simplificada para:', categoria);
@@ -57,20 +64,33 @@ const PulmaoAnimation: React.FC<{ fase: 'inspirar' | 'segurar' | 'expirar', cate
       return;
     }
 
-    console.log(`🎬 Carregando animação pequena: ${animationFile}`);
+    console.log(`🎬 Tentando carregar: ${animationFile}`);
     
     try {
+      console.log('🔍 Iniciando fetch...');
       const response = await fetch(animationFile);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
+      console.log('🔍 Response status:', response.status);
+      console.log('🔍 Response ok:', response.ok);
       
-      console.log('✅ Dados carregados:', data);
+      if (!response.ok) {
+        console.error('❌ Response não ok:', response.status, response.statusText);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      console.log('🔍 Convertendo para JSON...');
+      const data = await response.json();
+      console.log('✅ Dados carregados, tipo:', typeof data);
+      console.log('✅ Dados tem chaves:', Object.keys(data));
       
       if (containerRef.current && (window as any).lottie) {
+        console.log('🔍 Criando animação Lottie...');
+        
         if (animationRef.current) {
+          console.log('🔍 Destruindo animação anterior...');
           animationRef.current.destroy();
         }
         
+        console.log('🔍 Chamando lottie.loadAnimation...');
         const animation = (window as any).lottie.loadAnimation({
           container: containerRef.current,
           renderer: 'svg',
@@ -79,16 +99,25 @@ const PulmaoAnimation: React.FC<{ fase: 'inspirar' | 'segurar' | 'expirar', cate
           animationData: data
         });
         
+        console.log('🔍 Animação criada:', !!animation);
         animationRef.current = animation;
         
         const speed = fase === 'inspirar' ? 1.5 : fase === 'segurar' ? 0.5 : 1;
+        console.log('🔍 Setando speed:', speed);
         animation.setSpeed(speed);
         
-        console.log('🚀 Animação Lottie criada!');
+        console.log('🚀 Animação Lottie criada com sucesso!');
         setAnimationData(data);
+      } else {
+        console.error('❌ Container ou Lottie não disponível:', {
+          container: !!containerRef.current,
+          lottie: !!(window as any).lottie
+        });
+        setAnimationData({ simplified: true });
       }
     } catch (error) {
-      console.error('❌ Erro ao carregar animação:', error);
+      console.error('❌ Erro completo:', error);
+      console.error('❌ Stack:', error.stack);
       setAnimationData({ simplified: true });
     }
   };
