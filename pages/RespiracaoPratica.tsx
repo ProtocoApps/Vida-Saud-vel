@@ -49,16 +49,16 @@ const PulmaoAnimation: React.FC<{ fase: 'inspirar' | 'segurar' | 'expirar', cate
     
     switch (categoria) {
       case 'Foco':
-        animationFile = '/animations/Ripple Alert.json';
+        animationFile = '/assets/animations/Ripple Alert.json';
         break;
       case 'Angústia':
-        animationFile = '/animations/Writing - Blue BG.json';
+        animationFile = '/assets/animations/Writing - Blue BG.json';
         break;
       case 'Segurança':
-        animationFile = '/animations/family hug.json';
+        animationFile = '/assets/animations/family hug.json';
         break;
       default:
-        animationFile = '/animations/breathing-exercise.json';
+        animationFile = '/assets/animations/breathing-exercise.json';
     }
     
     console.log(`🎬 Carregando animação: ${animationFile}`);
