@@ -1,84 +1,153 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AppScreen } from '../types';
 
-// Componente para animação do pulmão - CSS PURO (sem JSON)
+// Componente para animação do pulmão - VERSÃO OTIMIZADA
 const PulmaoAnimation: React.FC<{ fase: 'inspirar' | 'segurar' | 'expirar', categoria: string }> = ({ fase, categoria }) => {
-  const [isAnimating, setIsAnimating] = useState(true);
+  const [animationData, setAnimationData] = useState<any>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const animationRef = useRef<any>(null);
 
   useEffect(() => {
-    // Reiniciar animação quando a fase mudar
-    setIsAnimating(false);
-    setTimeout(() => setIsAnimating(true), 50);
-  }, [fase]);
-
-  const getAnimationStyle = () => {
-    const baseStyle = {
-      transition: 'all 2s ease-in-out',
-      transform: 'scale(1)'
+    // Carregar script Lottie
+    const loadLottie = () => {
+      if (!(window as any).lottie) {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js';
+        script.onload = () => {
+          console.log('✅ Lottie carregado');
+          loadAnimation();
+        };
+        document.head.appendChild(script);
+      } else {
+        loadAnimation();
+      }
     };
 
-    switch (fase) {
-      case 'inspirar':
-        return { ...baseStyle, transform: 'scale(1.3)', opacity: '1' };
-      case 'segurar':
-        return { ...baseStyle, transform: 'scale(1.1)', opacity: '0.9' };
-      case 'expirar':
-        return { ...baseStyle, transform: 'scale(0.7)', opacity: '0.7' };
-      default:
-        return baseStyle;
-    }
-  };
+    loadLottie();
 
-  const getAnimationIcon = () => {
+    return () => {
+      if (animationRef.current) {
+        animationRef.current.destroy();
+      }
+    };
+  }, [categoria]);
+
+  const loadAnimation = async () => {
+    // Usar apenas os arquivos pequenos
+    let animationFile = '';
+    
     switch (categoria) {
       case 'Foco':
-        return '💎';
+        animationFile = '/assets/animations/Ripple Alert.json'; // 2.9KB - PEQUENO!
+        break;
       case 'Angústia':
-        return '✍️';
+        animationFile = '/assets/animations/Writing - Blue BG.json'; // 233KB - GRANDE
+        break;
       case 'Segurança':
-        return '🤗';
+        animationFile = '/assets/animations/family hug.json'; // 188KB - GRANDE
+        break;
       default:
-        return '🫁';
+        animationFile = '/assets/animations/breathing-exercise.json'; // 36KB - MÉDIO
+    }
+
+    // Para arquivos grandes, usar versão simplificada
+    if (categoria === 'Angústia' || categoria === 'Segurança') {
+      console.log('🎬 Usando animação simplificada para:', categoria);
+      setAnimationData({ simplified: true });
+      return;
+    }
+
+    console.log(`🎬 Carregando animação pequena: ${animationFile}`);
+    
+    try {
+      const response = await fetch(animationFile);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      
+      console.log('✅ Dados carregados:', data);
+      
+      if (containerRef.current && (window as any).lottie) {
+        if (animationRef.current) {
+          animationRef.current.destroy();
+        }
+        
+        const animation = (window as any).lottie.loadAnimation({
+          container: containerRef.current,
+          renderer: 'svg',
+          loop: true,
+          autoplay: true,
+          animationData: data
+        });
+        
+        animationRef.current = animation;
+        
+        const speed = fase === 'inspirar' ? 1.5 : fase === 'segurar' ? 0.5 : 1;
+        animation.setSpeed(speed);
+        
+        console.log('🚀 Animação Lottie criada!');
+        setAnimationData(data);
+      }
+    } catch (error) {
+      console.error('❌ Erro ao carregar animação:', error);
+      setAnimationData({ simplified: true });
     }
   };
 
-  const getAnimationColor = () => {
-    switch (categoria) {
-      case 'Foco':
-        return 'bg-blue-500/20';
-      case 'Angústia':
-        return 'bg-purple-500/20';
-      case 'Segurança':
-        return 'bg-green-500/20';
-      default:
-        return 'bg-primary/10';
+  // Atualizar velocidade quando a fase mudar
+  useEffect(() => {
+    if (animationRef.current) {
+      const speed = fase === 'inspirar' ? 1.5 : fase === 'segurar' ? 0.5 : 1;
+      animationRef.current.setSpeed(speed);
     }
-  };
+  }, [fase]);
 
-  return (
-    <div className="w-full h-full flex items-center justify-center">
-      <div className="relative">
-        {/* Círculos de respiração */}
-        <div 
-          className={`absolute inset-0 w-32 h-32 rounded-full ${getAnimationColor()} transition-all duration-2000`}
-          style={getAnimationStyle()}
-        />
-        
-        {/* Círculo interno */}
-        <div 
-          className={`absolute inset-4 w-24 h-24 rounded-full ${getAnimationColor()} transition-all duration-2000 delay-300`}
-          style={getAnimationStyle()}
-        />
-        
-        {/* Ícone central */}
-        <div 
-          className="absolute inset-0 w-32 h-32 rounded-full flex items-center justify-center"
-          style={getAnimationStyle()}
-        >
-          <div className={`text-4xl ${isAnimating ? 'animate-pulse' : ''}`}>
-            {getAnimationIcon()}
+  // Se não tem dados ou é simplificado
+  if (!animationData || animationData.simplified) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <div className="relative">
+          <div 
+            className={`absolute inset-0 w-32 h-32 rounded-full bg-primary/20 transition-all duration-2000`}
+            style={{
+              transform: fase === 'inspirar' ? 'scale(1.3)' : 
+                     fase === 'segurar' ? 'scale(1.1)' : 'scale(0.7)',
+              opacity: fase === 'inspirar' ? 1 : fase === 'segurar' ? 0.9 : 0.7
+            }}
+          />
+          <div 
+            className={`absolute inset-4 w-24 h-24 rounded-full bg-primary/30 transition-all duration-2000 delay-300`}
+            style={{
+              transform: fase === 'inspirar' ? 'scale(1.2)' : 
+                     fase === 'segurar' ? 'scale(1.0)' : 'scale(0.8)',
+              opacity: fase === 'inspirar' ? 0.8 : fase === 'segurar' ? 0.6 : 0.4
+            }}
+          />
+          <div className="absolute inset-0 w-32 h-32 rounded-full flex items-center justify-center">
+            <div className="text-3xl animate-pulse">
+              {categoria === 'Foco' ? '💎' : 
+               categoria === 'Angústia' ? '✍️' : 
+               categoria === 'Segurança' ? '🤗' : '🫁'}
+            </div>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // Se tem dados Lottie, mostrar animação real
+  return (
+    <div className="w-full h-full flex items-center justify-center">
+      <div 
+        className={`transition-all duration-1000 ${
+          fase === 'inspirar' ? 'scale-125' : 
+          fase === 'segurar' ? 'scale-110' : 
+          'scale-75'
+        }`}
+      >
+        <div 
+          ref={containerRef}
+          className="w-32 h-32"
+        />
       </div>
     </div>
   );
