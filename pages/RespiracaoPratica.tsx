@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AppScreen } from '../types';
 
-// Componente para animação do pulmão (JSON) - versão que estava funcionando
+// Componente para animação do pulmão (JSON) - versão corrigida
 const PulmaoAnimation: React.FC<{ fase: 'inspirar' | 'segurar' | 'expirar', categoria: string }> = ({ fase, categoria }) => {
   const [animationData, setAnimationData] = useState<any>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
@@ -9,135 +9,33 @@ const PulmaoAnimation: React.FC<{ fase: 'inspirar' | 'segurar' | 'expirar', cate
   const animationRef = useRef<any>(null);
 
   useEffect(() => {
+    // Verificar se o Lottie já está carregado
+    if ((window as any).lottie) {
+      setScriptLoaded(true);
+      loadAnimation();
+      return;
+    }
+
     // Carregar script do Lottie via CDN
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js';
     script.async = true;
     
     script.onload = () => {
+      console.log('✅ Script Lottie carregado!');
       setScriptLoaded(true);
-      // Carregar animação JSON baseado na categoria
-      if (categoria === 'Foco') {
-        console.log('Carregando animação FOCO...');
-        fetch('/animations/Ripple Alert.json')
-          .then(response => {
-            console.log('Status FOCO:', response.status);
-            return response.json();
-          })
-          .then(data => {
-            console.log('Dados FOCO recebidos');
-            setAnimationData(data);
-            
-            // Inicializar animação quando o container estiver pronto
-            if (containerRef.current && (window as any).lottie) {
-              console.log('Criando animação FOCO...');
-              const animation = (window as any).lottie.loadAnimation({
-                container: containerRef.current,
-                renderer: 'svg',
-                loop: true,
-                autoplay: true,
-                animationData: data
-              });
-              
-              // Sincronizar velocidade com a fase
-              const speed = fase === 'inspirar' ? 1.5 : fase === 'segurar' ? 0.5 : 1;
-              animation.setSpeed(speed);
-              console.log('Animação FOCO criada!');
-            } else {
-              console.log('Container ou Lottie não pronto para FOCO');
-            }
-          })
-          .catch(error => console.error('Erro FOCO:', error));
-      } else if (categoria === 'Angústia') {
-        console.log('Carregando animação ANGÚSTIA...');
-        fetch('/animations/Writing - Blue BG.json')
-          .then(response => {
-            console.log('Status ANGÚSTIA:', response.status);
-            return response.json();
-          })
-          .then(data => {
-            console.log('Dados ANGÚSTIA recebidos');
-            setAnimationData(data);
-            
-            // Inicializar animação quando o container estiver pronto
-            if (containerRef.current && (window as any).lottie) {
-              console.log('Criando animação ANGÚSTIA...');
-              const animation = (window as any).lottie.loadAnimation({
-                container: containerRef.current,
-                renderer: 'svg',
-                loop: true,
-                autoplay: true,
-                animationData: data
-              });
-              
-              // Sincronizar velocidade com a fase
-              const speed = fase === 'inspirar' ? 1.5 : fase === 'segurar' ? 0.5 : 1;
-              animation.setSpeed(speed);
-              console.log('Animação ANGÚSTIA criada!');
-            } else {
-              console.log('Container ou Lottie não pronto para ANGÚSTIA');
-            }
-          })
-          .catch(error => console.error('Erro ANGÚSTIA:', error));
-      } else if (categoria === 'Segurança') {
-        console.log('Carregando animação SEGURANÇA...');
-        fetch('/animations/family hug.json')
-          .then(response => {
-            console.log('Status SEGURANÇA:', response.status);
-            return response.json();
-          })
-          .then(data => {
-            console.log('Dados SEGURANÇA recebidos');
-            setAnimationData(data);
-            
-            // Inicializar animação quando o container estiver pronto
-            if (containerRef.current && (window as any).lottie) {
-              console.log('Criando animação SEGURANÇA...');
-              const animation = (window as any).lottie.loadAnimation({
-                container: containerRef.current,
-                renderer: 'svg',
-                loop: true,
-                autoplay: true,
-                animationData: data
-              });
-              
-              // Sincronizar velocidade com a fase
-              const speed = fase === 'inspirar' ? 1.5 : fase === 'segurar' ? 0.5 : 1;
-              animation.setSpeed(speed);
-              console.log('Animação SEGURANÇA criada!');
-            } else {
-              console.log('Container ou Lottie não pronto para SEGURANÇA');
-            }
-          })
-          .catch(error => console.error('Erro SEGURANÇA:', error));
-      } else {
-        console.log('Carregando animação NORMAL...');
-        fetch('/animations/breathing-exercise.json')
-          .then(response => response.json())
-          .then(data => {
-            console.log('Dados NORMAL recebidos');
-            setAnimationData(data);
-            
-            if (containerRef.current && (window as any).lottie) {
-              const animation = (window as any).lottie.loadAnimation({
-                container: containerRef.current,
-                renderer: 'svg',
-                loop: true,
-                autoplay: true,
-                animationData: data
-              });
-              console.log('Animação NORMAL criada!');
-            }
-          })
-          .catch(error => console.error('Erro NORMAL:', error));
-      }
+      loadAnimation();
     };
     
-    document.body.appendChild(script);
+    script.onerror = () => {
+      console.error('❌ Erro ao carregar script Lottie');
+    };
+    
+    document.head.appendChild(script);
     
     return () => {
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
+      if (document.head.contains(script)) {
+        document.head.removeChild(script);
       }
       if (animationRef.current) {
         animationRef.current.destroy();
@@ -145,18 +43,88 @@ const PulmaoAnimation: React.FC<{ fase: 'inspirar' | 'segurar' | 'expirar', cate
     };
   }, [categoria]);
 
+  const loadAnimation = () => {
+    // Carregar animação JSON baseado na categoria
+    let animationFile = '';
+    
+    switch (categoria) {
+      case 'Foco':
+        animationFile = '/animations/Ripple Alert.json';
+        break;
+      case 'Angústia':
+        animationFile = '/animations/Writing - Blue BG.json';
+        break;
+      case 'Segurança':
+        animationFile = '/animations/family hug.json';
+        break;
+      default:
+        animationFile = '/animations/breathing-exercise.json';
+    }
+    
+    console.log(`🎬 Carregando animação: ${animationFile}`);
+    
+    fetch(animationFile)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('✅ Dados da animação recebidos:', data);
+        setAnimationData(data);
+        
+        // Inicializar animação quando o container estiver pronto
+        if (containerRef.current && (window as any).lottie) {
+          console.log('🎯 Criando animação...');
+          
+          // Destruir animação anterior se existir
+          if (animationRef.current) {
+            animationRef.current.destroy();
+          }
+          
+          const animation = (window as any).lottie.loadAnimation({
+            container: containerRef.current,
+            renderer: 'svg',
+            loop: true,
+            autoplay: true,
+            animationData: data
+          });
+          
+          animationRef.current = animation;
+          
+          // Sincronizar velocidade com a fase
+          const speed = fase === 'inspirar' ? 1.5 : fase === 'segurar' ? 0.5 : 1;
+          animation.setSpeed(speed);
+          console.log('🚀 Animação criada com sucesso!');
+        } else {
+          console.log('❌ Container ou Lottie não pronto:', {
+            container: !!containerRef.current,
+            lottie: !!(window as any).lottie
+          });
+        }
+      })
+      .catch(error => {
+        console.error('❌ Erro ao carregar animação:', error);
+      });
+  };
+
   // Atualizar velocidade quando a fase mudar
   useEffect(() => {
     if (animationRef.current) {
       const speed = fase === 'inspirar' ? 1.5 : fase === 'segurar' ? 0.5 : 1;
       animationRef.current.setSpeed(speed);
+      console.log(`⚡ Velocidade alterada para: ${speed} (fase: ${fase})`);
     }
   }, [fase]);
 
   if (!animationData) {
     return (
       <div className="w-32 h-32 flex items-center justify-center text-gray-400">
-        <div className="animate-pulse">Carregando...</div>
+        <div className="animate-pulse text-center">
+          <div className="text-2xl mb-2">🧘</div>
+          <div className="text-xs">Carregando...</div>
+        </div>
       </div>
     );
   }
