@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AppScreen } from '../types';
 
-// Componente para animação do pulmão (JSON) - versão corrigida
+// Componente para animação do pulmão (JSON) - versão com import direto
 const PulmaoAnimation: React.FC<{ fase: 'inspirar' | 'segurar' | 'expirar', categoria: string }> = ({ fase, categoria }) => {
   const [animationData, setAnimationData] = useState<any>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
@@ -44,26 +44,26 @@ const PulmaoAnimation: React.FC<{ fase: 'inspirar' | 'segurar' | 'expirar', cate
   }, [categoria]);
 
   const loadAnimation = () => {
-    // Carregar animação JSON baseado na categoria
-    let animationFile = '';
+    // Import direto dos arquivos JSON
+    let animationUrl = '';
     
     switch (categoria) {
       case 'Foco':
-        animationFile = '/assets/animations/Ripple Alert.json';
+        animationUrl = 'https://vida-saud-vel-dusky.vercel.app/assets/animations/Ripple%20Alert.json';
         break;
       case 'Angústia':
-        animationFile = '/assets/animations/Writing - Blue BG.json';
+        animationUrl = 'https://vida-saud-vel-dusky.vercel.app/assets/animations/Writing%20-%20Blue%20BG.json';
         break;
       case 'Segurança':
-        animationFile = '/assets/animations/family hug.json';
+        animationUrl = 'https://vida-saud-vel-dusky.vercel.app/assets/animations/family%20hug.json';
         break;
       default:
-        animationFile = '/assets/animations/breathing-exercise.json';
+        animationUrl = 'https://vida-saud-vel-dusky.vercel.app/assets/animations/breathing-exercise.json';
     }
     
-    console.log(`🎬 Carregando animação: ${animationFile}`);
+    console.log(`🎬 Carregando animação: ${animationUrl}`);
     
-    fetch(animationFile)
+    fetch(animationUrl)
       .then(response => {
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -106,6 +106,49 @@ const PulmaoAnimation: React.FC<{ fase: 'inspirar' | 'segurar' | 'expirar', cate
       })
       .catch(error => {
         console.error('❌ Erro ao carregar animação:', error);
+        // Tentar fallback com caminho relativo
+        console.log('🔄 Tentando fallback com caminho relativo...');
+        tryFallback();
+      });
+  };
+
+  const tryFallback = () => {
+    let fallbackFile = '';
+    
+    switch (categoria) {
+      case 'Foco':
+        fallbackFile = '/assets/animations/Ripple Alert.json';
+        break;
+      case 'Angústia':
+        fallbackFile = '/assets/animations/Writing - Blue BG.json';
+        break;
+      case 'Segurança':
+        fallbackFile = '/assets/animations/family hug.json';
+        break;
+      default:
+        fallbackFile = '/assets/animations/breathing-exercise.json';
+    }
+    
+    console.log(`🔄 Tentando fallback: ${fallbackFile}`);
+    
+    fetch(fallbackFile)
+      .then(response => response.json())
+      .then(data => {
+        console.log('✅ Fallback funcionou!');
+        setAnimationData(data);
+        if (containerRef.current && (window as any).lottie) {
+          const animation = (window as any).lottie.loadAnimation({
+            container: containerRef.current,
+            renderer: 'svg',
+            loop: true,
+            autoplay: true,
+            animationData: data
+          });
+          animationRef.current = animation;
+        }
+      })
+      .catch(error => {
+        console.error('❌ Fallback também falhou:', error);
       });
   };
 
