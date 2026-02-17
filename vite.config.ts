@@ -23,6 +23,8 @@ export default defineConfig(({ mode }) => {
       build: {
         outDir: 'dist',
         assetsDir: 'assets'
-      }
+      },
+      // Adicionar suporte a JSON
+      assetsInclude: ['**/*.json']
     };
 });

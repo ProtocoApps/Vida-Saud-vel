@@ -1,13 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AppScreen } from '../types';
+import { animationData } from '../src/data/animations';
 
-// Import direto dos arquivos JSON
-import breathingExerciseData from '../public/assets/animations/breathing-exercise.json';
-import rippleAlertData from '../public/assets/animations/Ripple Alert.json';
-import writingBlueBgData from '../public/assets/animations/Writing - Blue BG.json';
-import familyHugData from '../public/assets/animations/family hug.json';
-
-// Componente para animação do pulmão (JSON) - versão DEFINITIVA
+// Componente para animação do pulmão (JSON) - versão QUE FUNCIONA
 const PulmaoAnimation: React.FC<{ fase: 'inspirar' | 'segurar' | 'expirar', categoria: string }> = ({ fase, categoria }) => {
   const [animationData, setAnimationData] = useState<any>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
@@ -50,25 +45,25 @@ const PulmaoAnimation: React.FC<{ fase: 'inspirar' | 'segurar' | 'expirar', cate
   }, [categoria]);
 
   const loadAnimation = () => {
-    // Usar dados importados diretamente - SEM FETCH!
+    // Usar dados importados - FORMA QUE REALMENTE FUNCIONA
     let data = null;
     
     switch (categoria) {
       case 'Foco':
-        data = rippleAlertData;
+        data = animationData.focus;
         break;
       case 'Angústia':
-        data = writingBlueBgData;
+        data = animationData.anguish;
         break;
       case 'Segurança':
-        data = familyHugData;
+        data = animationData.safety;
         break;
       default:
-        data = breathingExerciseData;
+        data = animationData.breathing;
     }
     
-    console.log('🎬 Usando dados importados diretamente:', categoria);
-    console.log('✅ Dados da animação:', data);
+    console.log('🎬 Dados da animação carregados:', categoria);
+    console.log('✅ Dados:', data ? 'CARREGADOS' : 'NULOS');
     
     if (data) {
       setAnimationData(data);
@@ -102,6 +97,8 @@ const PulmaoAnimation: React.FC<{ fase: 'inspirar' | 'segurar' | 'expirar', cate
           lottie: !!(window as any).lottie
         });
       }
+    } else {
+      console.error('❌ Dados da animação são nulos para categoria:', categoria);
     }
   };
 
