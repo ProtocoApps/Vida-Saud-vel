@@ -28,6 +28,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [videoDuration, setVideoDuration] = useState(0);
   const [volume, setVolume] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isGifExpanded, setIsGifExpanded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const isGifExercise = /\.gif($|\?)/i.test(videoUrl);
@@ -125,6 +126,33 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   return (
     <div className="flex flex-col h-full bg-neutral-light dark:bg-neutral-dark">
+      {isGifExercise && isGifExpanded && (
+        <div className="fixed inset-0 z-[60] bg-black/95 flex flex-col">
+          <div className="flex items-center justify-between p-4">
+            <button
+              onClick={() => setIsGifExpanded(false)}
+              className="size-10 rounded-full bg-white/10 text-white flex items-center justify-center"
+            >
+              <span className="material-symbols-outlined">arrow_back_ios_new</span>
+            </button>
+            <p className="text-white font-semibold text-sm truncate px-4">{title}</p>
+            <button
+              onClick={() => setIsGifExpanded(false)}
+              className="size-10 rounded-full bg-white/10 text-white flex items-center justify-center"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          </div>
+          <div className="flex-1 flex items-center justify-center p-4">
+            <img
+              src={videoUrl}
+              alt={title}
+              className="max-w-full max-h-full object-contain"
+            />
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="sticky top-0 bg-neutral-light/80 dark:bg-neutral-dark/80 backdrop-blur-md p-4 flex items-center justify-between z-10 border-b border-gray-100 dark:border-white/5">
         <button 
@@ -149,11 +177,20 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           >
             <div className="relative aspect-video">
               {isGifExercise ? (
-                <img
-                  src={videoUrl}
-                  alt={title}
-                  className="w-full h-full object-cover"
-                />
+                <>
+                  <img
+                    src={videoUrl}
+                    alt={title}
+                    className="w-full h-full object-contain bg-black"
+                  />
+                  <button
+                    onClick={() => setIsGifExpanded(true)}
+                    className="absolute right-3 top-3 px-3 py-2 rounded-xl bg-black/55 text-white flex items-center gap-2 text-sm font-medium"
+                  >
+                    <span className="material-symbols-outlined text-base">open_in_full</span>
+                    Ampliar
+                  </button>
+                </>
               ) : (
                 <>
                   <video
