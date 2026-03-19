@@ -151,6 +151,9 @@ const App: React.FC = () => {
           title={currentScreen.params?.title || ''}
           category={currentScreen.params?.category || ''}
           duration={currentScreen.params?.duration || ''}
+          level={currentScreen.params?.level || ''}
+          thumbnailUrl={currentScreen.params?.thumbnailUrl || ''}
+          instructions={currentScreen.params?.instructions || []}
         />;
       case AppScreen.HISTORICO:
         return <Historico onNavigate={navigate} />;

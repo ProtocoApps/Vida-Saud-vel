@@ -44,6 +44,9 @@ export interface NavigationParams {
   title?: string;
   category?: string;
   duration?: string;
+  level?: string;
+  thumbnailUrl?: string;
+  instructions?: string[];
 }
 
 export interface NavigateFunction {

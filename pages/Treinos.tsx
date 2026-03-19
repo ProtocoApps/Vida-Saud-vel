@@ -21,6 +21,12 @@ interface VideoTreino {
   created_at: string;
 }
 
+const getTreinoInstructions = (video: VideoTreino) => [
+  `Assista ao vídeo completo de ${video.titulo} antes de iniciar para entender a execução correta dos movimentos.`,
+  `Realize o treino no seu ritmo, respeitando seu nível ${video.nivel.toLowerCase()} e pausando sempre que necessário.`,
+  `Use a duração de ${video.duracao} como referência e mantenha a postura e a respiração estáveis durante toda a prática.`
+];
+
 const Treinos: React.FC<TreinosProps> = ({ onNavigate }) => {
   const { userData } = useGlobalUser();
   const [categoria, setCategoria] = useState('Todos');
@@ -184,7 +190,10 @@ const Treinos: React.FC<TreinosProps> = ({ onNavigate }) => {
                        videoUrl: treinoDoDia.video_url,
                        title: treinoDoDia.titulo,
                        category: treinoDoDia.categoria,
-                       duration: treinoDoDia.duracao
+                       duration: treinoDoDia.duracao,
+                       level: treinoDoDia.nivel,
+                       thumbnailUrl: treinoDoDia.thumbnail_url,
+                       instructions: getTreinoInstructions(treinoDoDia)
                      }
                    });
                  }}>
@@ -261,7 +270,10 @@ const Treinos: React.FC<TreinosProps> = ({ onNavigate }) => {
                            videoUrl: video.video_url,
                            title: video.titulo,
                            category: video.categoria,
-                           duration: video.duracao
+                           duration: video.duracao,
+                           level: video.nivel,
+                           thumbnailUrl: video.thumbnail_url,
+                           instructions: getTreinoInstructions(video)
                          }
                        });
                      }}>
