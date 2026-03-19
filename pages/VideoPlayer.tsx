@@ -30,6 +30,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const isGifExercise = /\.gif($|\?)/i.test(videoUrl);
 
   const detailInstructions = instructions.length > 0 ? instructions : [
     `Confira com atenção o treino ${title} antes de iniciar para entender a sequência proposta.`,
@@ -147,98 +148,108 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             className="relative bg-black rounded-3xl overflow-hidden ios-shadow"
           >
             <div className="relative aspect-video">
-              <video
-                ref={videoRef}
-                src={videoUrl}
-                poster={thumbnailUrl}
-                className="w-full h-full object-cover"
-                onTimeUpdate={handleTimeUpdate}
-                onLoadedMetadata={handleLoadedMetadata}
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
-                playsInline
-              />
-
-              {!isPlaying && (
-                <button
-                  onClick={togglePlay}
-                  className="absolute inset-0 flex items-center justify-center bg-black/25"
-                >
-                  <span className="size-16 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
-                    <span className="material-symbols-outlined text-4xl text-primary">play_arrow</span>
-                  </span>
-                </button>
-              )}
-
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-                {/* Progress Bar */}
-                <div className="mb-4">
-                  <input
-                    type="range"
-                    min="0"
-                    max={videoDuration || 0}
-                    value={currentTime}
-                    onChange={handleSeek}
-                    className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
-                    style={{
-                      background: `linear-gradient(to right, #dc2626 0%, #dc2626 ${progressPercentage}%, #4b5563 ${progressPercentage}%, #4b5563 100%)`
-                    }}
+              {isGifExercise ? (
+                <img
+                  src={videoUrl}
+                  alt={title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <>
+                  <video
+                    ref={videoRef}
+                    src={videoUrl}
+                    poster={thumbnailUrl}
+                    className="w-full h-full object-cover"
+                    onTimeUpdate={handleTimeUpdate}
+                    onLoadedMetadata={handleLoadedMetadata}
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                    playsInline
                   />
-                  <div className="flex justify-between text-xs text-gray-300 mt-1">
-                    <span>{formatTime(currentTime)}</span>
-                    <span>{formatTime(videoDuration)}</span>
-                  </div>
-                </div>
 
-                {/* Control Buttons */}
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <button 
-                      onClick={skipBackward}
-                      className="size-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-white">replay_10</span>
-                    </button>
-                    <button 
+                  {!isPlaying && (
+                    <button
                       onClick={togglePlay}
-                      className="size-12 rounded-full bg-white flex items-center justify-center hover:bg-gray-200 transition-colors"
+                      className="absolute inset-0 flex items-center justify-center bg-black/25"
                     >
-                      <span className="material-symbols-outlined text-black">
-                        {isPlaying ? 'pause' : 'play_arrow'}
+                      <span className="size-16 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
+                        <span className="material-symbols-outlined text-4xl text-primary">play_arrow</span>
                       </span>
                     </button>
-                    <button 
-                      onClick={skipForward}
-                      className="size-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-white">forward_10</span>
-                    </button>
-                  </div>
+                  )}
 
-                  <div className="flex items-center gap-3">
-                    <div className="hidden sm:flex items-center gap-2">
-                      <span className="material-symbols-outlined text-white text-sm">volume_up</span>
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                    {/* Progress Bar */}
+                    <div className="mb-4">
                       <input
                         type="range"
                         min="0"
-                        max="1"
-                        step="0.1"
-                        value={volume}
-                        onChange={handleVolumeChange}
-                        className="w-20 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+                        max={videoDuration || 0}
+                        value={currentTime}
+                        onChange={handleSeek}
+                        className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
+                        style={{
+                          background: `linear-gradient(to right, #dc2626 0%, #dc2626 ${progressPercentage}%, #4b5563 ${progressPercentage}%, #4b5563 100%)`
+                        }}
                       />
+                      <div className="flex justify-between text-xs text-gray-300 mt-1">
+                        <span>{formatTime(currentTime)}</span>
+                        <span>{formatTime(videoDuration)}</span>
+                      </div>
                     </div>
-                    <button 
-                      onClick={toggleFullscreen}
-                      className="size-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-white">
-                        {isFullscreen ? 'fullscreen_exit' : 'fullscreen'}
-                      </span>
-                    </button>
+
+                    {/* Control Buttons */}
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <button 
+                          onClick={skipBackward}
+                          className="size-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-white">replay_10</span>
+                        </button>
+                        <button 
+                          onClick={togglePlay}
+                          className="size-12 rounded-full bg-white flex items-center justify-center hover:bg-gray-200 transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-black">
+                            {isPlaying ? 'pause' : 'play_arrow'}
+                          </span>
+                        </button>
+                        <button 
+                          onClick={skipForward}
+                          className="size-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-white">forward_10</span>
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <div className="hidden sm:flex items-center gap-2">
+                          <span className="material-symbols-outlined text-white text-sm">volume_up</span>
+                          <input
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.1"
+                            value={volume}
+                            onChange={handleVolumeChange}
+                            className="w-20 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+                          />
+                        </div>
+                        <button 
+                          onClick={toggleFullscreen}
+                          className="size-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-white">
+                            {isFullscreen ? 'fullscreen_exit' : 'fullscreen'}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                </>
+              )}
             </div>
           </div>
 
